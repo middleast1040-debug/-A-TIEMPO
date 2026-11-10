@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>A Tiempo - Salida Exacta en Transporte Masivo</title>
+  <meta name="description" content="A Tiempo: Sal a la hora exacta en TransMilenio, Metro de Medellín, MÍO Cali, Transmetro y transporte masivo en Colombia." />
+  <meta name="theme-color" content="#0070F3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              400: '#38BDF8',
+              500: '#0070F3',
+              600: '#0060EA',
+              700: '#0052CC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- React 18 & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel Standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons Vanilla -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0, 112, 243, 0.3);
+      border-radius: 4px;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.2; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#F4F6F9] dark:bg-[#070D18] text-slate-900 dark:text-white antialiased transition-colors duration-200 min-h-screen flex flex-col">
+  <div id="root"></div>
+
+  <!-- Main Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // --- Web Audio API Native Synthesizer (Tonos Modernos sin Descargas) ---
+    const playTone = (type = 'gentle') => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'gentle') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.18, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.42);
+        } else if (type === 'urgent') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(659.25, now); // E5
+          osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.25); // A5
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.28, now + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.start(now);
+          osc.stop(now + 0.52);
+        } else if (type === 'transfer') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440.00, now); // A4
+          osc.frequency.linearRampToValueAtTime(587.33, now + 0.12); // D5
+          osc.frequency.linearRampToValueAtTime(880.00, now + 0.24); // A5
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.2, now + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.48);
+        }
+      } catch (err) {
+        console.warn('Audio Tone unavailable', err);
+      }
+    };
+
+    // --- Transit Database (Colombia) ---
+    const CITIES_DATA = {
+      bogota: {
+        id: 'bogota',
+        name: 'Bogotá (TransMilenio & SITP)',
+        shortName: 'Bogotá',
+        cardName: 'TuLlave',
+        fare: 2950,
+        transferWindowMins: 125,
+        routes: [
+          { id: 'tm-h27', code: 'H27', name: 'Portal Norte ↔ Portal Usme', type: 'troncal', color: '#DC2626', badgeColor: '#B91C1C', vagon: 'Vagón 1 (Plataforma Troncal)', waitMins: 3, headway: 4, origin: 'Portal Norte', dest: 'Portal Usme', corridor: 'Troncal Caracas' },
+          { id: 'tm-c15', code: 'C15', name: 'Portal Tunal ↔ Portal Suba', type: 'troncal', color: '#DC2626', badgeColor: '#B91C1C', vagon: 'Vagón 2 (Puerta 3)', waitMins: 6, headway: 5, origin: 'Portal Tunal', dest: 'Portal Suba', corridor: 'Troncal Suba / NQS' },
+          { id: 'tm-b10', code: 'B10', name: 'Portal 80 ↔ Portal Norte', type: 'troncal', color: '#DC2626', badgeColor: '#B91C1C', vagon: 'Vagón 1 (Puerta 1)', waitMins: 5, headway: 6, origin: 'Portal 80', dest: 'Portal Norte', corridor: 'Troncal AutoNorte' },
+          { id: 'sitp-z8', code: 'Z8', name: 'Metrovivienda ↔ Toberín', type: 'sitp', color: '#2563EB', badgeColor: '#1D4ED8', vagon: 'Paradero Zonal 142A', waitMins: 8, headway: 9, origin: 'Metrovivienda', dest: 'Toberín', corridor: 'Av. Boyacá' },
+          { id: 'sitp-330', code: '330', name: 'La Estrellita ↔ El Uval', type: 'sitp', color: '#2563EB', badgeColor: '#1D4ED8', vagon: 'Paradero Mixto 09', waitMins: 11, headway: 12, origin: 'La Estrellita', dest: 'El Uval', corridor: 'Carrera 7 / Usme' },
+          { id: 'ali-16-14', code: '16-14', name: 'Aeropuerto Eldorado', type: 'alimentador', color: '#16A34A', badgeColor: '#15803D', vagon: 'Plataforma 1 Alimentadores', waitMins: 4, headway: 5, origin: 'Portal Eldorado', dest: 'Aeropuerto Eldorado', corridor: 'Calle 26' },
+        ],
+        stations: ['Portal Norte', 'Calle 100', 'Calle 72', 'Marly', 'Avenida Jiménez', 'Tercer Milenio', 'Calle 40 Sur', 'Portal Usme', 'Portal Tunal', 'Portal Suba', 'Portal 80', 'Portal Eldorado', 'Toberín', 'Modelia']
+      },
+      medellin: {
+        id: 'medellin',
+        name: 'Medellín (Metro & Metroplús)',
+        shortName: 'Medellín',
+        cardName: 'Cívica',
+        fare: 3280,
+        transferWindowMins: 90,
+        routes: [
+          { id: 'met-linea-a', code: 'Línea A', name: 'Niquía ↔ La Estrella', type: 'troncal', color: '#059669', badgeColor: '#047857', vagon: 'Plataforma Central', waitMins: 3, headway: 3, origin: 'Niquía', dest: 'La Estrella', corridor: 'Corredor Río Medellín' },
+          { id: 'met-linea-b', code: 'Línea B', name: 'San Antonio ↔ San Javier', type: 'troncal', color: '#EA580C', badgeColor: '#C2410C', vagon: 'Andén 2 San Antonio', waitMins: 4, headway: 5, origin: 'San Antonio', dest: 'San Javier', corridor: 'Línea B Centro-Occidente' },
+          { id: 'met-plus-1', code: 'Línea 1', name: 'Universidad de Medellín ↔ Aranjuez', type: 'sitp', color: '#2563EB', badgeColor: '#1D4ED8', vagon: 'Parada Metroplús Carril Solo Bus', waitMins: 6, headway: 6, origin: 'Univ. de Medellín', dest: 'Aranjuez', corridor: 'Calle 30 / Belén' },
+        ],
+        stations: ['Niquía', 'Acevedo', 'Hospital', 'San Antonio', 'Poblado', 'Envigado', 'Itagüí', 'La Estrella', 'San Javier', 'Aranjuez']
+      },
+      cali: {
+        id: 'cali',
+        name: 'Cali (MÍO)',
+        shortName: 'Cali',
+        cardName: 'MÍO',
+        fare: 2900,
+        transferWindowMins: 100,
+        routes: [
+          { id: 'mio-t31', code: 'T31', name: 'Paso del Comercio ↔ Universidades', type: 'troncal', color: '#2563EB', badgeColor: '#1D4ED8', vagon: 'Vagón Sur Plataforma B', waitMins: 5, headway: 6, origin: 'Paso del Comercio', dest: 'Universidades', corridor: 'Carrera 1 / Calle 5' },
+          { id: 'mio-e21', code: 'E21', name: 'Terminal Menga ↔ Universidades', type: 'troncal', color: '#DC2626', badgeColor: '#B91C1C', vagon: 'Vagón 1 Expreso', waitMins: 7, headway: 7, origin: 'Terminal Menga', dest: 'Universidades', corridor: 'Troncal Américas' },
+        ],
+        stations: ['Terminal Menga', 'Paso del Comercio', 'San Pedro', 'Tequendama', 'Capri', 'Universidades', 'Andrés Sanín']
+      }
+    };
+
+    // --- App Component ---
+    function App() {
+      const [theme, setTheme] = useState('dark');
+      const [cityKey, setCityKey] = useState('bogota');
+      const [activeTab, setActiveTab] = useState('planear'); // 'planear' | 'rutas' | 'tarjeta' | 'ayuda'
+      const [selectedRouteId, setSelectedRouteId] = useState('tm-h27');
+      const [originStop, setOriginStop] = useState('Calle 100');
+      const [destinationStop, setDestinationStop] = useState('Portal Usme');
+      const [walkingMinutes, setWalkingMinutes] = useState(5);
+      const [bufferMinutes, setBufferMinutes] = useState(2);
+      const [isAlarmActive, setIsAlarmActive] = useState(true);
+      const [isWakeUpAlarmActive, setIsWakeUpAlarmActive] = useState(false);
+      const [travelState, setTravelState] = useState('inactive'); // 'inactive' | 'monitoring' | 'arrived'
+
+      // Search and Bus Locator
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedTypeFilter, setSelectedTypeFilter] = useState('all');
+
+      // Modals
+      const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+      const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+      const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+      const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+
+      // TuLlave Card State
+      const [cardBalance, setCardBalance] = useState(14500);
+      const [transferRemainingSecs, setTransferRemainingSecs] = useState(125 * 60);
+      const [isTransferActive, setIsTransferActive] = useState(true);
+      const [transmiBiciTrips, setTransmiBiciTrips] = useState(18);
+
+      const city = CITIES_DATA[cityKey] || CITIES_DATA.bogota;
+      const currentRoute = city.routes.find(r => r.id === selectedRouteId) || city.routes[0];
+
+      // Sync dark mode class
+      useEffect(() => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [theme]);
+
+      // Transfer countdown ticker
+      useEffect(() => {
+        if (!isTransferActive) return;
+        const timer = setInterval(() => {
+          setTransferRemainingSecs(prev => Math.max(0, prev - 1));
+        }, 1000);
+        return () => clearInterval(timer);
+      }, [isTransferActive]);
+
+      // Filtered Routes for Bus Locator
+      const filteredRoutes = useMemo(() => {
+        return city.routes.filter(r => {
+          const matchQuery = r.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             r.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             r.dest.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchType = selectedTypeFilter === 'all' || r.type === selectedTypeFilter;
+          return matchQuery && matchType;
+        });
+      }, [city, searchQuery, selectedTypeFilter]);
+
+      // Calculation of Door to Door
+      const busWaitMins = currentRoute.waitMins || 4;
+      const rideMins = 24;
+      const totalSecondsUntilDeparture = Math.max(0, (busWaitMins - (walkingMinutes + bufferMinutes)) * 60 + 45);
+      const depMins = Math.floor(totalSecondsUntilDeparture / 60);
+      const depSecs = totalSecondsUntilDeparture % 60;
+
+      // Handle Quick Destination Presets
+      const handleSelectPreset = (destName) => {
+        setDestinationStop(destName);
+        playTone('gentle');
+      };
+
+      return (
+        <div className="w-full flex-1 flex flex-col items-center">
+          {/* HEADER */}
+          <header className="w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-md sticky top-0 z-30 transition-colors">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
+              {/* Brand Logo */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0060EA] to-[#0080FF] flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">A TIEMPO</span>
+                  <span className="block text-[10px] font-mono text-[#0060EA] dark:text-[#38BDF8] font-bold leading-none">Salida Exacta</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* City Picker */}
+                <select
+                  value={cityKey}
+                  onChange={(e) => {
+                    setCityKey(e.target.value);
+                    const newCity = CITIES_DATA[e.target.value];
+                    setSelectedRouteId(newCity.routes[0].id);
+                    setOriginStop(newCity.stations[0]);
+                    setDestinationStop(newCity.stations[newCity.stations.length - 1]);
+                  }}
+                  className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#0070F3] cursor-pointer"
+                >
+                  <option value="bogota">Bogotá (TM)</option>
+                  <option value="medellin">Medellín (Metro)</option>
+                  <option value="cali">Cali (MÍO)</option>
+                </select>
+
+                {/* Day / Night Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                  title="Cambiar Modo Día / Noche"
+                >
+                  {theme === 'dark' ? (
+                    <span className="text-amber-400 font-bold text-xs">☀️</span>
+                  ) : (
+                    <span className="text-[#0060EA] font-bold text-xs">🌙</span>
+                  )}
+                </button>
+
+                {/* Tutorial Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsTutorialOpen(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                >
+                  <span>Tutorial</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN CONTAINER */}
+          <main className="max-w-4xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-5 flex-1 box-border overflow-x-clip pb-24">
+            {/* Hero Title & Fare Summary */}
+            <section className="text-center max-w-xl mx-auto pt-1 pb-1 space-y-1.5 px-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight break-words">
+                Sal a la hora exacta
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 break-words">
+                Calculamos el minuto exacto para salir de tu puerta y subirte al bus sin esperar en el andén.
+              </p>
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                <span className="font-bold text-slate-800 dark:text-slate-200">{city.name}</span>
+                <span>·</span>
+                <span>Pasaje ${city.fare.toLocaleString('es-CO')}</span>
+                <span>·</span>
+                <span className="text-[#0060EA] dark:text-[#38BDF8] font-bold">Transbordo $0 COP</span>
+              </div>
+            </section>
+
+            {/* Travel State Capsule */}
+            <div className="flex items-center justify-center w-full px-2">
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs shadow-xs max-w-full">
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${travelState === 'monitoring' ? 'bg-[#0070F3] animate-ping' : 'bg-slate-400'}`} />
+                <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[200px] sm:max-w-xs">
+                  {travelState === 'monitoring' ? `Monitoreando salida hacia ${destinationStop}` : travelState === 'arrived' ? '¡Viaje completado!' : 'Modo Reposo (Alarmas en silencio)'}
+                </span>
+                {travelState === 'monitoring' ? (
+                  <button
+                    type="button"
+                    onClick={() => { setTravelState('arrived'); playTone('gentle'); }}
+                    className="px-2.5 py-0.5 bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold rounded-lg text-[10px] cursor-pointer"
+                  >
+                    ¡Ya llegué!
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setTravelState('monitoring'); playTone('urgent'); }}
+                    className="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#0060EA] dark:text-[#38BDF8] font-bold rounded-lg text-[10px] cursor-pointer"
+                  >
+                    ▶ Activar Salida
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* MAIN TAB SWITCHER */}
+            <div className="flex items-center justify-between p-1 rounded-2xl bg-slate-200/70 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-bold gap-1">
+              {[
+                { id: 'planear', label: 'Planear Salida', icon: '⏱️' },
+                { id: 'rutas', label: 'Ubicador de Bus', icon: '🔍' },
+                { id: 'tarjeta', label: 'Mi Tarjeta & Bici', icon: '💳' },
+                { id: 'ayuda', label: 'Apoyos & Subsidio', icon: '🤝' },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => { setActiveTab(t.id); playTone('gentle'); }}
+                  className={`flex-1 py-2.5 px-2 rounded-xl transition cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+                    activeTab === t.id
+                      ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-md shadow-blue-500/20 font-extrabold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{t.icon}</span>
+                  <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* TAB 1: PLANEAR SALIDA */}
+            {activeTab === 'planear' && (
+              <div className="space-y-5">
+                {/* Quick Destination Hub ("¿A dónde vas?") */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                      ¿A dónde vas hoy?
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Atajos frecuentes</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { label: 'Trabajo / Oficina', dest: city.stations[1] || 'Calle 100', icon: '💼' },
+                      { label: 'Estudio', dest: city.stations[2] || 'Calle 72', icon: '🎓' },
+                      { label: 'Terminal / Vuelo', dest: city.stations[city.stations.length - 2] || 'Portal Eldorado', icon: '✈️' },
+                      { label: 'Centro / Plaza', dest: city.stations[4] || 'Avenida Jiménez', icon: '🏛️' },
+                    ].map(p => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => handleSelectPreset(p.dest)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between min-h-[58px] ${
+                          destinationStop === p.dest
+                            ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white border-[#0070F3] shadow-md shadow-blue-500/20 font-bold'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                        }`}
+                      >
+                        <div className="text-sm">{p.icon}</div>
+                        <div className="text-xs font-bold truncate">{p.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Route Selector & Door-to-Door Parameters */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Origin Stop */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                        Estación de Origen
+                      </label>
+                      <select
+                        value={originStop}
+                        onChange={(e) => setOriginStop(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                      >
+                        {city.stations.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Destination Stop */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                        Estación de Destino
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={destinationStop}
+                          onChange={(e) => setDestinationStop(e.target.value)}
+                          className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                        >
+                          {city.stations.map(st => <option key={st} value={st}>{st}</option>)}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const temp = originStop;
+                            setOriginStop(destinationStop);
+                            setDestinationStop(temp);
+                            playTone('gentle');
+                          }}
+                          className="px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold transition cursor-pointer"
+                          title="Invertir trayecto ida y vuelta"
+                        >
+                          ⇄
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Route Card Preview */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="px-2.5 py-1 rounded-lg text-white font-mono font-black text-xs shadow-xs"
+                        style={{ backgroundColor: currentRoute.color }}
+                      >
+                        {currentRoute.code}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">{currentRoute.name}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">{currentRoute.vagon}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] text-slate-400 block font-medium">Paso en estación</span>
+                      <span className="text-sm font-mono font-black text-[#0060EA] dark:text-[#38BDF8]">~{currentRoute.waitMins} min</span>
+                    </div>
+                  </div>
+
+                  {/* Walking minutes buttons */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs flex-wrap gap-2">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Minutos a pie hasta la estación:</span>
+                    <div className="flex gap-1.5">
+                      {[3, 5, 8, 12].map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setWalkingMinutes(m)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            walkingMinutes === m
+                              ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                          }`}
+                        >
+                          {m} min
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* RESULT CARD: COUNTDOWN & RECOMMENDATION */}
+                <div className="bg-gradient-to-br from-[#0070F3]/10 via-[#0060EA]/5 to-transparent border border-[#0070F3]/40 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4 text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-200 dark:border-blue-900/50">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-[#0070F3] px-2 py-0.5 rounded-md">
+                        Cálculo en Tiempo Real
+                      </span>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1">
+                        Salida recomendada a pie
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl sm:text-3xl font-black font-mono text-[#0060EA] dark:text-[#38BDF8]">
+                        {depMins}m {depSecs < 10 ? `0${depSecs}` : depSecs}s
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Cuenta regresiva para salir</span>
+                    </div>
+                  </div>
+
+                  {/* Steps breakdown */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">1. Caminata</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{walkingMinutes} min a pie</span>
+                      <span className="text-[10px] text-slate-500 block">Hacia {originStop}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">2. Llegada del Bus</span>
+                      <span className="font-bold text-[#0060EA] dark:text-[#38BDF8]">Pasa en ~{busWaitMins} min</span>
+                      <span className="text-[10px] text-slate-500 block">{currentRoute.code} en {currentRoute.vagon}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">3. Viaje a Bordo</span>
+                      <span className="font-bold text-slate-900 dark:text-white">~{rideMins} min de trayecto</span>
+                      <span className="text-[10px] text-slate-500 block">Llegada a {destinationStop}</span>
+                    </div>
+                  </div>
+
+                  {/* Proximity Alarm «Avísame al llegar» Toggle */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Alarma de Proximidad (&apos;Avísame al llegar&apos;)
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Tono suave 2 paradas antes de llegar a {destinationStop}.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWakeUpAlarmActive(prev => !prev);
+                        playTone(isWakeUpAlarmActive ? 'gentle' : 'urgent');
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer text-xs ${
+                        isWakeUpAlarmActive
+                          ? 'bg-[#EFF6FF] dark:bg-blue-950 text-[#0060EA] dark:text-[#38BDF8] border border-[#0070F3]'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {isWakeUpAlarmActive ? '🔔 Alarma Activa' : '🔕 Activar Alarma'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: UBICADOR DE BUS */}
+            {activeTab === 'rutas' && (
+              <div className="space-y-4">
+                {/* Search Bar */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Ubicador de Rutas & Vagón
+                  </span>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Busca por código o nombre (ej. H27, C15, Z8, 330)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                    />
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex gap-1.5 flex-wrap text-xs">
+                    {[
+                      { id: 'all', label: 'Todos los buses' },
+                      { id: 'troncal', label: 'Troncales (Rojo)' },
+                      { id: 'sitp', label: 'SITP / Zonal (Azul)' },
+                      { id: 'alimentador', label: 'Alimentador (Verde)' },
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setSelectedTypeFilter(f.id)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          selectedTypeFilter === f.id
+                            ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Filtered Route Cards List */}
+                <div className="space-y-2.5">
+                  {filteredRoutes.map(r => (
+                    <div
+                      key={r.id}
+                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#0070F3]/50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className="px-3 py-1 rounded-xl text-white font-mono font-black text-xs shrink-0 shadow-xs"
+                          style={{ backgroundColor: r.color }}
+                        >
+                          {r.code}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-sm text-slate-900 dark:text-white block truncate">{r.name}</span>
+                          <span className="text-[11px] text-[#0060EA] dark:text-[#38BDF8] font-semibold block truncate">📍 {r.vagon}</span>
+                          <span className="text-[10px] text-slate-400 block truncate">Corredor: {r.corridor} · Frecuencia: cada {r.headway}m</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        <div className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-right">
+                          <span className="text-[9px] text-slate-400 block font-medium">Espera</span>
+                          <span className="font-mono text-[#0060EA] dark:text-[#38BDF8] font-black text-xs">~{r.waitMins} min</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRouteId(r.id);
+                            setOriginStop(r.origin);
+                            setDestinationStop(r.dest);
+                            setActiveTab('planear');
+                            playTone('gentle');
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                        >
+                          Calcular Salida →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: MI TARJETA & TRANSMIBICI */}
+            {activeTab === 'tarjeta' && (
+              <div className="space-y-4 text-left">
+                {/* Physical Card Representation */}
+                <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#7F1D1D] via-[#B91C1C] to-[#991B1B] text-white shadow-xl relative overflow-hidden space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] tracking-widest font-mono uppercase bg-black/40 px-2 py-0.5 rounded">FÍSICA PERSONALIZADA</span>
+                      <h4 className="text-lg font-black mt-1">{city.cardName} Plus</h4>
+                    </div>
+                    <span className="text-2xl font-mono font-bold tracking-tighter">NFC / CHIP</span>
+                  </div>
+
+                  <div className="py-2">
+                    <span className="text-[11px] text-white/80 block">Saldo Disponible</span>
+                    <span className="text-3xl sm:text-4xl font-mono font-black tracking-tight">${cardBalance.toLocaleString('es-CO')} COP</span>
+                    <span className="text-[11px] text-white/90 block mt-1">~{Math.floor(cardBalance / city.fare)} viajes completos restantes</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-white/20 text-xs font-mono">
+                    <span>1010-8492-3847-9201</span>
+                    <span>2 Créditos de Emergencia</span>
+                  </div>
+                </div>
+
+                {/* Transfer Window ($0 COP) Status */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                      Ventana de Trasbordo Activa ($0 COP)
+                    </span>
+                    <span className="font-mono text-[#0060EA] dark:text-[#38BDF8] font-black text-sm">
+                      {Math.floor(transferRemainingSecs / 60)} min restantes
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Cuentas con 125 minutos para hacer hasta 2 trasbordos sin pagar costo extra en buses troncales y zonales.
+                  </p>
+                </div>
+
+                {/* TransMiBici Incentives & Rewards */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0070F3]/15 via-[#0060EA]/5 to-transparent border border-[#0070F3]/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🚲</span>
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">TransMiBici · Multimodalidad</h4>
+                        <span className="text-[11px] text-[#0060EA] dark:text-[#38BDF8] font-bold">Cicloparqueaderos cubiertos y vigilados a $0 COP</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2 py-0.5 rounded-full">
+                      Incentivo Oficial
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-700 dark:text-slate-300">Validaciones Bici + Bus:</span>
+                      <span className="text-[#0060EA] dark:text-[#38BDF8] font-mono">{transmiBiciTrips} / 30 viajes</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#0080FF] to-[#0060EA]"
+                        style={{ width: `${(transmiBiciTrips / 30) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                      ¡Completa 30 viajes combinados y reclama 1 pasaje gratis automáticamente en tu tarjeta!
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransmiBiciTrips(prev => Math.min(30, prev + 1));
+                      playTone('transfer');
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                  >
+                    + Registrar Bici + Bus Hoy (+1 Validación)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: APOYOS SOCIALES & SUBSIDIOS */}
+            {activeTab === 'ayuda' && (
+              <div className="space-y-4 text-left">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Subsidios & Beneficios Distritales
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    A Tiempo te orienta y activa perfiles asistidos de transporte para población prioritaria:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {[
+                      { title: 'Sisbén A / B / C', desc: 'Tarifa preferencial reducida en viajes troncales y zonales.', icon: '👥' },
+                      { title: 'Adulto Mayor (+62)', desc: 'Descuento oficial y subsidio mensual directo en tu tarjeta.', icon: '❤️' },
+                      { title: 'Convenio Estudiantil', desc: 'Subsidio para jóvenes en colegios o centros de estudio.', icon: '🎓' },
+                      { title: 'Movilidad Reducida', desc: 'Acceso con rampas prioritarias y acompañamiento asistido.', icon: '♿' },
+                    ].map(s => (
+                      <div key={s.title} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{s.icon}</span>
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">{s.title}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Direct Community & Emergency Contacts */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Canales de Asesoría Directa
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <a
+                      href="https://wa.me/573000000000"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 hover:border-blue-400 text-center block"
+                    >
+                      💬 WhatsApp
+                    </a>
+                    <a
+                      href="https://t.me/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 hover:border-blue-400 text-center block"
+                    >
+                      ✈️ Telegram
+                    </a>
+                    <a
+                      href="https://facebook.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 hover:border-blue-400 text-center block"
+                    >
+                      📘 Facebook
+                    </a>
+                    <a
+                      href="tel:123"
+                      className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-900 font-bold text-rose-600 dark:text-rose-400 text-center block"
+                    >
+                      🚨 Línea 123
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* TUTORIAL MODAL */}
+          {isTutorialOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+              <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 text-left space-y-4 max-h-[90vh] overflow-y-auto custom-scroll">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                      Tutorial de Uso
+                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">A Tiempo</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTutorialOpen(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                    <strong className="block text-slate-900 dark:text-white font-bold mb-0.5">1. Ubicador de Buses & Vagón:</strong>
+                    Escribe tu ruta (ej. H27, C15, Z8) para ubicar el vagón oficial donde para y evitar empujones o esperas bajo la lluvia.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                    <strong className="block text-slate-900 dark:text-white font-bold mb-0.5">2. Salida Exacta a Pie:</strong>
+                    Ajusta tus minutos de caminata y mira el cronómetro para cruzar la puerta justo a tiempo.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                    <strong className="block text-slate-900 dark:text-white font-bold mb-0.5">3. Alarma «Avísame al llegar»:</strong>
+                    Un tono suave te advierte 2 paradas antes de tu destino para que viajes tranquilo sin pasarte de largo.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                    <strong className="block text-slate-900 dark:text-white font-bold mb-0.5">4. Tarjeta & TransMiBici:</strong>
+                    Control de tus 125 minutos de trasbordo gratis y recompensas de pasajes al registrar tu bicicleta.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTutorialOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Entendido, ¡Comenzar!
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="w-full border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-[#070D18]/50">
+            <p>A Tiempo · Tu salida exacta en transporte masivo en Colombia</p>
+          </footer>
+        </div>
+      );
+    }
+
+    // Render React App
+    const rootElement = document.getElementById('root');
+    ReactDOM.createRoot(rootElement).render(<App />);
+  </script>
+</body>
+</html>

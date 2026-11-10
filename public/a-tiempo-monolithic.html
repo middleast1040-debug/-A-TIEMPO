@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>A Tiempo - Salida Exacta en Transporte Masivo Colombia</title>
+  <meta name="description" content="A Tiempo: Salida exacta, horarios, rutas, transbordos, recargas y alertas sísmicas del SGC para transporte masivo en Colombia." />
+  <meta name="theme-color" content="#0070F3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Tipografías Oficiales Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              400: '#38BDF8',
+              500: '#0070F3',
+              600: '#0060EA',
+              700: '#0052CC',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel Standalone para JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0, 112, 243, 0.4);
+      border-radius: 6px;
+    }
+    @keyframes pulse-gentle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .animate-pulse-gentle {
+      animation: pulse-gentle 2.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#F4F6F9] dark:bg-[#070D18] text-slate-900 dark:text-white antialiased transition-colors duration-200 min-h-screen flex flex-col">
+  <div id="root" class="w-full flex-1 flex flex-col"></div>
+
+  <!-- SCRIPT MONOLÍTICO DE LA APLICACIÓN -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // =========================================================================
+    // 1. SINTETIZADOR WEB AUDIO API (TONOS MODERNOS SIN DESCARGAS DE AUDIO)
+    // =========================================================================
+    const playTransitTone = (type = 'gentle') => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'gentle') {
+          // Tono suave armónico (C5 -> E5)
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.2, now + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'urgent') {
+          // Tono de aviso / salida (E5 -> A5 con armónico)
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(659.25, now);
+          osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.22);
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.26, now + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        } else if (type === 'transfer') {
+          // Tono de validación de transbordo (Arpegio triple)
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440.00, now);
+          osc.frequency.linearRampToValueAtTime(554.37, now + 0.1);
+          osc.frequency.linearRampToValueAtTime(659.25, now + 0.2);
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.22, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        } else if (type === 'seismic') {
+          // Tono de alerta sísmica pulsante
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+          osc.frequency.linearRampToValueAtTime(300, now + 0.4);
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.65);
+        }
+      } catch (err) {
+        console.warn('Audio contextual tone unavailable:', err);
+      }
+    };
+
+    // Vibración Háptica Nativa
+    const triggerHaptic = (pattern = [80]) => {
+      try {
+        if ('vibrate' in navigator) {
+          navigator.vibrate(pattern);
+        }
+      } catch {
+        // Ignorar si no está soportado en navegador de escritorio
+      }
+    };
+
+    // =========================================================================
+    // 2. BASE DE DATOS DE SISTEMAS DE TRANSPORTE MASIVO EN COLOMBIA
+    // =========================================================================
+    const COLOMBIA_CITIES = {
+      bogota: {
+        id: 'bogota',
+        name: 'Bogotá (TransMilenio & SITP)',
+        shortName: 'Bogotá',
+        cardBrand: 'TuLlave',
+        fare: 2950,
+        transferWindowMins: 125,
+        routesCount: 840,
+        coverage: 'Troncales Caracas, NQS, AutoNorte, Suba, Américas, Calle 26, Carrera 10 y Zonales SITP',
+        stations: [
+          'Portal Norte', 'Calle 142', 'Calle 100', 'Calle 72', 'Calle 45', 'Marly',
+          'Avenida Jiménez', 'Tercer Milenio', 'Calle 40 Sur', 'Portal Usme',
+          'Portal Tunal', 'Portal Suba', 'Portal 80', 'Portal Américas', 'Portal Eldorado'
+        ],
+        routes: [
+          { id: 'tm-h27', code: 'H27', name: 'Portal Norte ↔ Portal Usme', type: 'troncal', color: '#DC2626', vagon: 'Vagón 1 (Plataforma Troncal)', waitMins: 3, headway: 4, origin: 'Portal Norte', dest: 'Portal Usme', corridor: 'Troncal Caracas' },
+          { id: 'tm-c15', code: 'C15', name: 'Portal Tunal ↔ Portal Suba', type: 'troncal', color: '#DC2626', vagon: 'Vagón 2 (Puerta 3)', waitMins: 5, headway: 5, origin: 'Portal Tunal', dest: 'Portal Suba', corridor: 'Troncal Suba / NQS' },
+          { id: 'tm-b10', code: 'B10', name: 'Portal 80 ↔ Portal Norte', type: 'troncal', color: '#DC2626', vagon: 'Vagón 1 (Puerta 1)', waitMins: 4, headway: 6, origin: 'Portal 80', dest: 'Portal Norte', corridor: 'Troncal AutoNorte' },
+          { id: 'tm-k10', code: 'K10', name: 'Portal 80 ↔ Portal Eldorado', type: 'troncal', color: '#DC2626', vagon: 'Vagón 3 (Calle 26)', waitMins: 6, headway: 5, origin: 'Portal 80', dest: 'Portal Eldorado', corridor: 'Troncal Calle 26' },
+          { id: 'sitp-z8', code: 'Z8', name: 'Metrovivienda ↔ Toberín', type: 'sitp', color: '#2563EB', vagon: 'Paradero Zonal 142A', waitMins: 8, headway: 9, origin: 'Metrovivienda', dest: 'Toberín', corridor: 'Av. Boyacá' },
+          { id: 'sitp-330', code: '330', name: 'La Estrellita ↔ El Uval', type: 'sitp', color: '#2563EB', vagon: 'Paradero Mixto 09', waitMins: 11, headway: 12, origin: 'La Estrellita', dest: 'El Uval', corridor: 'Carrera 7 / Usme' },
+          { id: 'sitp-c115', code: 'C115', name: 'El Retiro ↔ Jaqueline', type: 'sitp', color: '#2563EB', vagon: 'Paradero Mixto 41', waitMins: 9, headway: 10, origin: 'El Retiro', dest: 'Jaqueline', corridor: 'Av. Primero de Mayo' },
+          { id: 'ali-16-14', code: '16-14', name: 'Aeropuerto Eldorado', type: 'alimentador', color: '#16A34A', vagon: 'Plataforma 1 Alimentadores', waitMins: 4, headway: 5, origin: 'Portal Eldorado', dest: 'Aeropuerto Eldorado', corridor: 'Calle 26' },
+          { id: 'ali-2-1', code: '2-1', name: 'Mirador del Paraíso', type: 'alimentador', color: '#16A34A', vagon: 'Plataforma Alimentador Sur', waitMins: 5, headway: 6, origin: 'Portal Tunal', dest: 'Paraíso', corridor: 'Ciudad Bolívar' }
+        ]
+      },
+      medellin: {
+        id: 'medellin',
+        name: 'Medellín (Metro, Metroplús & Metrocable)',
+        shortName: 'Medellín',
+        cardBrand: 'Cívica',
+        fare: 3280,
+        transferWindowMins: 90,
+        routesCount: 380,
+        coverage: 'Línea A, Línea B, Tranvía de Ayacucho, Cuencas Alimentadoras y Metrocables',
+        stations: [
+          'Niquía', 'Bello', 'Acevedo', 'Hospital', 'San Antonio', 'Poblado',
+          'Aguacatala', 'Envigado', 'Itagüí', 'La Estrella', 'San Javier', 'Aranjuez'
+        ],
+        routes: [
+          { id: 'met-linea-a', code: 'Línea A', name: 'Niquía ↔ La Estrella', type: 'troncal', color: '#059669', vagon: 'Plataforma Central', waitMins: 3, headway: 3, origin: 'Niquía', dest: 'La Estrella', corridor: 'Corredor Río Medellín' },
+          { id: 'met-linea-b', code: 'Línea B', name: 'San Antonio ↔ San Javier', type: 'troncal', color: '#EA580C', vagon: 'Andén 2 San Antonio', waitMins: 4, headway: 5, origin: 'San Antonio', dest: 'San Javier', corridor: 'Centro-Occidente' },
+          { id: 'met-plus-1', code: 'Línea 1', name: 'Universidad de Medellín ↔ Aranjuez', type: 'sitp', color: '#2563EB', vagon: 'Parada Metroplús Carril Solo Bus', waitMins: 5, headway: 6, origin: 'Univ. de Medellín', dest: 'Aranjuez', corridor: 'Calle 30 / Belén' },
+          { id: 'met-cable-k', code: 'Línea K', name: 'Acevedo ↔ Santo Domingo', type: 'alimentador', color: '#16A34A', vagon: 'Telecabina Plataforma Superior', waitMins: 2, headway: 2, origin: 'Acevedo', dest: 'Santo Domingo', corridor: 'Metrocable Nororiental' }
+        ]
+      },
+      cali: {
+        id: 'cali',
+        name: 'Cali (MÍO)',
+        shortName: 'Cali',
+        cardBrand: 'MÍO',
+        fare: 2900,
+        transferWindowMins: 100,
+        routesCount: 210,
+        coverage: 'Troncales Carrera 1, Calle 5, Carrera 15, Américas y Rutas Pretroncales',
+        stations: [
+          'Terminal Menga', 'Paso del Comercio', 'San Pedro', 'Tequendama',
+          'Unidad Deportiva', 'Capri', 'Universidades', 'Terminal Andrés Sanín'
+        ],
+        routes: [
+          { id: 'mio-t31', code: 'T31', name: 'Paso del Comercio ↔ Universidades', type: 'troncal', color: '#2563EB', vagon: 'Vagón Sur Plataforma B', waitMins: 4, headway: 5, origin: 'Paso del Comercio', dest: 'Universidades', corridor: 'Carrera 1 / Calle 5' },
+          { id: 'mio-e21', code: 'E21', name: 'Terminal Menga ↔ Universidades', type: 'troncal', color: '#DC2626', vagon: 'Vagón 1 Expreso', waitMins: 6, headway: 7, origin: 'Terminal Menga', dest: 'Universidades', corridor: 'Troncal Américas' },
+          { id: 'mio-p21a', code: 'P21A', name: 'Versalles ↔ Universidades', type: 'sitp', color: '#2563EB', vagon: 'Bahía Externa Pretroncal', waitMins: 8, headway: 9, origin: 'Versalles', dest: 'Universidades', corridor: 'Autopista Suroriental' }
+        ]
+      },
+      barranquilla: {
+        id: 'barranquilla',
+        name: 'Barranquilla (Transmetro)',
+        shortName: 'Barranquilla',
+        cardBrand: 'Transmetro',
+        fare: 3100,
+        transferWindowMins: 90,
+        routesCount: 85,
+        coverage: 'Troncal Murillo, Troncal Olaya Herrera y Alimentadoras de Soledad',
+        stations: [
+          'Portal de Soledad', 'Pacho Galán', 'Pedro Ramayá', 'Joaquín Barrios Polo',
+          'La Ocho', 'Chiquinquirá', 'Arenosa', 'Retorno', 'Esthercita Forero', 'Romelio Martínez'
+        ],
+        routes: [
+          { id: 'tm-r1', code: 'R1', name: 'Portal de Soledad ↔ Romelio Martínez', type: 'troncal', color: '#EA580C', vagon: 'Plataforma Principal Troncal', waitMins: 5, headway: 6, origin: 'Portal de Soledad', dest: 'Romelio Martínez', corridor: 'Calle Murillo' },
+          { id: 'tm-b1', code: 'B1', name: 'Portal de Soledad ↔ Barranquillita', type: 'troncal', color: '#DC2626', vagon: 'Vagón 2 Troncal', waitMins: 7, headway: 8, origin: 'Portal de Soledad', dest: 'Barranquillita', corridor: 'Olaya Herrera' },
+          { id: 'tm-a1-4', code: 'A1-4', name: 'Alimentador Aeropuerto Cortissoz', type: 'alimentador', color: '#16A34A', vagon: 'Bahía Alimentadora Soledad', waitMins: 9, headway: 10, origin: 'Portal Soledad', dest: 'Aeropuerto Cortissoz', corridor: 'Calle 30' }
+        ]
+      },
+      bucaramanga: {
+        id: 'bucaramanga',
+        name: 'Bucaramanga (Metrolínea)',
+        shortName: 'Bucaramanga',
+        cardBrand: 'Metrolínea',
+        fare: 2800,
+        transferWindowMins: 70,
+        routesCount: 45,
+        coverage: 'Autopista Floridablanca - Piedecuesta y Carrera 15',
+        stations: [
+          'Portal Piedecuesta', 'Estación Españolita', 'Estación Lagos',
+          'Cañaveral', 'Provenza', 'Chorreras', 'Quebradaseca', 'UIS'
+        ],
+        routes: [
+          { id: 'metro-t3', code: 'T3', name: 'Portal Piedecuesta ↔ Quebradaseca', type: 'troncal', color: '#0284C7', vagon: 'Plataforma Troncal Central', waitMins: 6, headway: 7, origin: 'Portal Piedecuesta', dest: 'Quebradaseca', corridor: 'Autopista Floridablanca' },
+          { id: 'metro-p8', code: 'P8', name: 'Piedecuesta ↔ UIS', type: 'sitp', color: '#2563EB', vagon: 'Parada Mixta Pretroncal', waitMins: 10, headway: 11, origin: 'Piedecuesta', dest: 'UIS', corridor: 'Carrera 27' }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 3. BASE DE DATOS DE ALERTAS VIALES Y SISMOS EN VIVO DEL SGC
+    // =========================================================================
+    const INITIAL_INCIDENTS = [
+      {
+        id: 'inc-1',
+        title: 'Congestión alta en Autopista Norte con Calle 127',
+        category: 'Trancón',
+        corridor: 'Autonorte (Calle 116 a 134)',
+        desc: 'Reducción a dos carriles por vehículo varado sentido norte-sur. Agentes de tránsito regulando el paso.',
+        timeAgo: 'Hace 6 min',
+        isCritical: true,
+      },
+      {
+        id: 'inc-2',
+        title: 'Bloqueo temporal en carril exclusivo Portal Américas',
+        category: 'Movilización',
+        corridor: 'Troncal Américas / Av. Cali',
+        desc: 'Manifestación en la intersección de Av. Cali con Av. Villavicencio. Retrasos de 15 min en rutas troncales.',
+        timeAgo: 'Hace 14 min',
+        isCritical: true,
+      },
+      {
+        id: 'inc-3',
+        title: 'Obras de infraestructura Metro Línea 1 en Av. Caracas',
+        category: 'Obras',
+        corridor: 'Troncal Caracas (Calles 45 a 72)',
+        desc: 'Hincado continuo de pilotes del viaducto. Carril exclusivo opera continuo sin interrupción; desvíos particulares por Cra 13.',
+        timeAgo: 'Hace 28 min',
+        isCritical: false,
+      },
+      {
+        id: 'inc-4',
+        title: 'Desvío operativo temporal en Calle 76',
+        category: 'Desvío',
+        corridor: 'Estación Calle 76 (Caracas)',
+        desc: 'Mantenimiento preventivo en puertas del vagón 1. Ascenso y descenso habilitado en vagón 2.',
+        timeAgo: 'Hace 1 hora',
+        isCritical: false,
+      }
+    ];
+
+    // Monitoreo SGC (Servicio Geológico Colombiano)
+    const LATEST_SGC_EARTHQUAKE = {
+      eventDate: 'Hoy, 08:14 Hora Local',
+      magnitude: 3.4,
+      epicentro: 'Los Santos, Santander (Sentido leve en Boyacá y Cundinamarca)',
+      profundidad: '142 km',
+      impactoTransporte: 'Sin afectación en troncales ni vías masivas. Operación al 100%.',
+      status: 'Normal',
+    };
+
+    // =========================================================================
+    // 4. COMPONENTE PRINCIPAL
+    // =========================================================================
+    function ATiempoApp() {
+      // Estado de navegación
+      const [activeTab, setActiveTab] = useState('rutas'); // 'rutas' | 'ciudades' | 'transbordo' | 'tarjeta' | 'alertas'
+      const [cityKey, setCityKey] = useState('bogota');
+      const [themeMode, setThemeMode] = useState('dark');
+
+      // Parámetros de Ruta y Cálculo
+      const currentCity = COLOMBIA_CITIES[cityKey] || COLOMBIA_CITIES.bogota;
+      const [selectedRouteId, setSelectedRouteId] = useState(currentCity.routes[0].id);
+      const [originStop, setOriginStop] = useState(currentCity.stations[2] || 'Calle 100');
+      const [destinationStop, setDestinationStop] = useState(currentCity.stations[currentCity.stations.length - 2] || 'Portal Usme');
+      const [walkingMinutes, setWalkingMinutes] = useState(5);
+      const [bufferMinutes, setBufferMinutes] = useState(2);
+      const [isWakeUpAlarmActive, setIsWakeUpAlarmActive] = useState(false);
+      const [travelMonitoring, setTravelMonitoring] = useState(false);
+
+      // Buscador de rutas
+      const [busSearchQuery, setBusSearchQuery] = useState('');
+      const [busTypeFilter, setBusTypeFilter] = useState('all');
+
+      // Estado de Ventana de Transbordo
+      const [transferTimeSecs, setTransferTimeSecs] = useState(currentCity.transferWindowMins * 60);
+      const [isTransferActive, setIsTransferActive] = useState(true);
+      const [transferSavingsCop, setTransferSavingsCop] = useState(currentCity.fare * 2);
+
+      // Estado de Tarjeta y Recargas
+      const [cardBalanceCop, setCardBalanceCop] = useState(15400);
+      const [selectedCardSkin, setSelectedCardSkin] = useState('roja'); // 'roja' | 'verde' | 'civica' | 'mio'
+      const [transmiBiciValidations, setTransmiBiciValidations] = useState(22);
+      const [rechargeMethod, setRechargeMethod] = useState('nequi'); // 'nequi' | 'daviplata' | 'pse' | 'breb'
+      const [rechargeAmount, setRechargeAmount] = useState(20000);
+      const [rechargeFeedback, setRechargeFeedback] = useState(null);
+
+      // SGC y Alertas
+      const [isTestingSeismic, setIsTestingSeismic] = useState(false);
+      const [seismicTestFeedback, setSeismicTestFeedback] = useState(null);
+      const [alertsFilter, setAlertsFilter] = useState('all');
+
+      // Modales de Apoyo y Tutorial
+      const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+      const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+      const [subsidizedProfile, setSubsidizedProfile] = useState(null);
+      const [largeTextMode, setLargeTextMode] = useState(false);
+
+      // Ruta seleccionada actual
+      const activeRoute = useMemo(() => {
+        return currentCity.routes.find(r => r.id === selectedRouteId) || currentCity.routes[0];
+      }, [currentCity, selectedRouteId]);
+
+      // Control del tema día/noche
+      useEffect(() => {
+        if (themeMode === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [themeMode]);
+
+      // Contador de transbordo en tiempo real
+      useEffect(() => {
+        if (!isTransferActive) return;
+        const interval = setInterval(() => {
+          setTransferTimeSecs(prev => {
+            if (prev <= 1) {
+              setIsTransferActive(false);
+              return 0;
+            }
+            if (prev === 900) {
+              // 15 minutos restantes: emitir aviso suave
+              playTransitTone('gentle');
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        return () => clearInterval(interval);
+      }, [isTransferActive]);
+
+      // Cálculo de Salida a Pie Puerta a Puerta
+      const busWaitTime = activeRoute.waitMins || 4;
+      const rideTransitTime = 22;
+      const secondsUntilDoorDeparture = Math.max(0, (busWaitTime - (walkingMinutes + bufferMinutes)) * 60 + 50);
+      const depMins = Math.floor(secondsUntilDoorDeparture / 60);
+      const depSecs = secondsUntilDoorDeparture % 60;
+
+      // Filtro de rutas para el buscador
+      const filteredBusRoutes = useMemo(() => {
+        return currentCity.routes.filter(r => {
+          const matchText = r.code.toLowerCase().includes(busSearchQuery.toLowerCase()) ||
+                            r.name.toLowerCase().includes(busSearchQuery.toLowerCase()) ||
+                            r.corridor.toLowerCase().includes(busSearchQuery.toLowerCase());
+          const matchType = busTypeFilter === 'all' || r.type === busTypeFilter;
+          return matchText && matchType;
+        });
+      }, [currentCity, busSearchQuery, busTypeFilter]);
+
+      // Acción de recarga
+      const handleExecuteRecharge = () => {
+        setCardBalanceCop(prev => prev + rechargeAmount);
+        playTransitTone('transfer');
+        triggerHaptic([100, 50, 100]);
+        setRechargeFeedback(`¡Recarga exitosa de $${rechargeAmount.toLocaleString('es-CO')} por ${rechargeMethod.toUpperCase()}! Saldo activado para validar en tótem.`);
+        setTimeout(() => setRechargeFeedback(null), 4500);
+      };
+
+      // Prueba de alarma sísmica SGC
+      const handleTestSeismic = () => {
+        setIsTestingSeismic(true);
+        playTransitTone('seismic');
+        triggerHaptic([150, 80, 150, 80, 300]);
+        setSeismicTestFeedback('Simulacro Sísmico: Sonido y vibración activos. Mantén la calma y sigue las instrucciones del personal.');
+        setTimeout(() => {
+          setIsTestingSeismic(false);
+          setSeismicTestFeedback(null);
+        }, 3500);
+      };
+
+      // Formatear segundos en MM:SS
+      const formatTime = (secs) => {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+      };
+
+      return (
+        <div className={`w-full flex-1 flex flex-col items-center ${largeTextMode ? 'text-base' : 'text-sm'}`}>
+          {/* =============================================================== */}
+          {/* CABECERA (HEADER) */}
+          {/* =============================================================== */}
+          <header className="w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-md sticky top-0 z-30 transition-colors">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
+              {/* Logo A Tiempo */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0060EA] to-[#0080FF] flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">A TIEMPO</span>
+                  <span className="block text-[10px] font-mono text-[#0060EA] dark:text-[#38BDF8] font-bold leading-none">Salida Exacta Colombia</span>
+                </div>
+              </div>
+
+              {/* Botones de Cabecera */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Selector Rápido de Ciudad */}
+                <select
+                  value={cityKey}
+                  onChange={(e) => {
+                    const cKey = e.target.value;
+                    setCityKey(cKey);
+                    const newC = COLOMBIA_CITIES[cKey];
+                    setSelectedRouteId(newC.routes[0].id);
+                    setOriginStop(newC.stations[0]);
+                    setDestinationStop(newC.stations[newC.stations.length - 1]);
+                    setTransferTimeSecs(newC.transferWindowMins * 60);
+                    playTransitTone('gentle');
+                  }}
+                  className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#0070F3] cursor-pointer"
+                >
+                  <option value="bogota">Bogotá (TM & SITP)</option>
+                  <option value="medellin">Medellín (Metro)</option>
+                  <option value="cali">Cali (MÍO)</option>
+                  <option value="barranquilla">Barranquilla (Transmetro)</option>
+                  <option value="bucaramanga">Bucaramanga (Metrolínea)</option>
+                </select>
+
+                {/* Modo Día / Noche */}
+                <button
+                  type="button"
+                  onClick={() => setThemeMode(prev => prev === 'dark' ? 'light' : 'dark')}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                  title="Cambiar Modo Día / Noche"
+                >
+                  {themeMode === 'dark' ? <span className="text-amber-400 font-bold text-xs">☀️</span> : <span className="text-[#0060EA] font-bold text-xs">🌙</span>}
+                </button>
+
+                {/* Botón Apoyo & Subsidios */}
+                <button
+                  type="button"
+                  onClick={() => setIsSupportModalOpen(true)}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-[#0060EA] dark:text-[#38BDF8] font-bold transition cursor-pointer"
+                  title="Modo Apoyo, Subsidios y Accesibilidad"
+                >
+                  ♿
+                </button>
+
+                {/* Botón Tutorial */}
+                <button
+                  type="button"
+                  onClick={() => setIsTutorialOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                >
+                  Tutorial
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* =============================================================== */}
+          {/* BARRA DE NAVEGACIÓN DE PESTAÑAS (5 PESTAÑAS SOLICITADAS) */}
+          {/* =============================================================== */}
+          <div className="w-full max-w-4xl mx-auto px-3.5 sm:px-6 pt-3">
+            <div className="grid grid-cols-5 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-bold gap-1 shadow-xs">
+              {[
+                { id: 'rutas', label: 'Rutas', icon: '⏱️' },
+                { id: 'ciudades', label: 'Ciudades', icon: '🏙️' },
+                { id: 'transbordo', label: 'Transbordo', icon: '🔄' },
+                { id: 'tarjeta', label: 'Mi Tarjeta', icon: '💳' },
+                { id: 'alertas', label: 'Alertas & SGC', icon: '🚨' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    playTransitTone('gentle');
+                  }}
+                  className={`py-2 px-1 rounded-xl transition cursor-pointer text-center flex flex-col sm:flex-row items-center justify-center gap-1 ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-md shadow-blue-500/25 font-black'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className="text-sm">{tab.icon}</span>
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* =============================================================== */}
+          {/* CONTENEDOR PRINCIPAL */}
+          {/* =============================================================== */}
+          <main className="max-w-4xl mx-auto w-full px-3.5 sm:px-6 py-4 space-y-5 flex-1 box-border overflow-x-clip pb-20">
+
+            {/* PESTAÑA 1: RUTAS & SALIDA EXACTA */}
+            {activeTab === 'rutas' && (
+              <div className="space-y-4">
+                {/* Hero Salida Exacta */}
+                <section className="text-center max-w-xl mx-auto pt-1 pb-1 space-y-1">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Salida Exacta a la Estación
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                    Sincronizamos tus minutos a pie con el paso de los buses en {currentCity.name}.
+                  </p>
+                </section>
+
+                {/* Cápsula de Monitoreo Activo */}
+                <div className="flex items-center justify-center">
+                  <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs shadow-xs max-w-full">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${travelMonitoring ? 'bg-[#0070F3] animate-ping' : 'bg-slate-400'}`} />
+                    <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[200px] sm:max-w-xs">
+                      {travelMonitoring ? `En camino hacia ${destinationStop}` : 'Modo Reposo (Alarmas en silencio)'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTravelMonitoring(prev => !prev);
+                        playTransitTone(travelMonitoring ? 'gentle' : 'urgent');
+                        triggerHaptic([60, 60]);
+                      }}
+                      className="px-2.5 py-0.5 bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold rounded-lg text-[10px] cursor-pointer"
+                    >
+                      {travelMonitoring ? 'Pausar' : '▶ Salir Ya'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selector de Paradas y Caminata */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                        Estación de Origen
+                      </label>
+                      <select
+                        value={originStop}
+                        onChange={(e) => setOriginStop(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                      >
+                        {currentCity.stations.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                        Estación de Destino
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={destinationStop}
+                          onChange={(e) => setDestinationStop(e.target.value)}
+                          className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                        >
+                          {currentCity.stations.map(st => <option key={st} value={st}>{st}</option>)}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tmp = originStop;
+                            setOriginStop(destinationStop);
+                            setDestinationStop(tmp);
+                            playTransitTone('gentle');
+                          }}
+                          className="px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition cursor-pointer"
+                          title="Invertir trayecto"
+                        >
+                          ⇄
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Previsualización del Bus Recomendado */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="px-2.5 py-1 rounded-lg text-white font-mono font-black text-xs shadow-xs"
+                        style={{ backgroundColor: activeRoute.color }}
+                      >
+                        {activeRoute.code}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">{activeRoute.name}</span>
+                        <span className="text-[11px] text-[#0060EA] dark:text-[#38BDF8] font-semibold block truncate">📍 {activeRoute.vagon}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] text-slate-400 block font-medium">Pasa en estación</span>
+                      <span className="text-sm font-mono font-black text-[#0060EA] dark:text-[#38BDF8]">~{activeRoute.waitMins} min</span>
+                    </div>
+                  </div>
+
+                  {/* Selector de Minutos de Caminata */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs flex-wrap gap-2">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Minutos a pie hasta la estación:</span>
+                    <div className="flex gap-1.5">
+                      {[3, 5, 8, 12].map(mins => (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => setWalkingMinutes(mins)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            walkingMinutes === mins
+                              ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                          }`}
+                        >
+                          {mins} min
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cuenta Regresiva Puerta a Puerta */}
+                <div className="bg-gradient-to-br from-[#0070F3]/15 via-[#0060EA]/5 to-transparent border border-[#0070F3]/40 rounded-2xl p-5 shadow-sm space-y-4 text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-200 dark:border-blue-900/50">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-[#0070F3] px-2 py-0.5 rounded-md">
+                        Cálculo en Vivo
+                      </span>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1">
+                        Momento de salida a pie
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black font-mono text-[#0060EA] dark:text-[#38BDF8]">
+                        {depMins}m {depSecs < 10 ? '0' : ''}{depSecs}s
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Tiempo restante para salir</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">1. Caminata</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{walkingMinutes} min a pie</span>
+                      <span className="text-[10px] text-slate-500 block">Hacia {originStop}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">2. Llegada del Bus</span>
+                      <span className="font-bold text-[#0060EA] dark:text-[#38BDF8]">Pasa en ~{busWaitTime} min</span>
+                      <span className="text-[10px] text-slate-500 block">{activeRoute.code} en {activeRoute.vagon}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">3. Viaje a Bordo</span>
+                      <span className="font-bold text-slate-900 dark:text-white">~{rideTransitTime} min estimados</span>
+                      <span className="text-[10px] text-slate-500 block">Llegada a {destinationStop}</span>
+                    </div>
+                  </div>
+
+                  {/* Alarma de Proximidad «Avísame al llegar» */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Alarma de Proximidad (&apos;Avísame al llegar&apos;)
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Tono suave 2 paradas antes de tu estación final ({destinationStop}).
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWakeUpAlarmActive(prev => !prev);
+                        playTransitTone(isWakeUpAlarmActive ? 'gentle' : 'urgent');
+                        triggerHaptic([70]);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer text-xs ${
+                        isWakeUpAlarmActive
+                          ? 'bg-[#EFF6FF] dark:bg-blue-950 text-[#0060EA] dark:text-[#38BDF8] border border-[#0070F3]'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {isWakeUpAlarmActive ? '🔔 Alarma Activa' : '🔕 Activar Alarma'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Ubicador de Buses por Código o Nombre */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Ubicador de Bus & Vagón en {currentCity.shortName}
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Escribe el código o nombre (ej. H27, C15, Z8, 330)..."
+                    value={busSearchQuery}
+                    onChange={(e) => setBusSearchQuery(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-[#0070F3]"
+                  />
+
+                  {/* Filtro de tipología */}
+                  <div className="flex gap-1.5 flex-wrap text-xs">
+                    {[
+                      { id: 'all', label: 'Todos' },
+                      { id: 'troncal', label: 'Troncales (Rojo)' },
+                      { id: 'sitp', label: 'Zonales (Azul)' },
+                      { id: 'alimentador', label: 'Alimentadores (Verde)' },
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setBusTypeFilter(f.id)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          busTypeFilter === f.id
+                            ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Lista de Buses Filtrados */}
+                  <div className="space-y-2 pt-1">
+                    {filteredBusRoutes.map(route => (
+                      <div
+                        key={route.id}
+                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs hover:border-[#0070F3]/40 transition"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className="px-2.5 py-1 rounded-lg text-white font-mono font-black text-xs shrink-0 shadow-xs"
+                            style={{ backgroundColor: route.color }}
+                          >
+                            {route.code}
+                          </span>
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 dark:text-white block truncate">{route.name}</span>
+                            <span className="text-[11px] text-[#0060EA] dark:text-[#38BDF8] block truncate">📍 {route.vagon}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-mono text-slate-500 dark:text-slate-400">~{route.waitMins}m</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRouteId(route.id);
+                              setOriginStop(route.origin);
+                              setDestinationStop(route.dest);
+                              playTransitTone('gentle');
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-xs cursor-pointer"
+                          >
+                            Seleccionar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PESTAÑA 2: CIUDADES */}
+            {activeTab === 'ciudades' && (
+              <div className="space-y-4 text-left">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Red Nacional de Transporte Masivo
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Selecciona tu ciudad para cargar tarifas oficiales, tarjetas inteligentes y cobertura completa:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {Object.values(COLOMBIA_CITIES).map(city => {
+                      const isSelected = city.id === cityKey;
+                      return (
+                        <div
+                          key={city.id}
+                          onClick={() => {
+                            setCityKey(city.id);
+                            setSelectedRouteId(city.routes[0].id);
+                            setOriginStop(city.stations[0]);
+                            setDestinationStop(city.stations[city.stations.length - 1]);
+                            setTransferTimeSecs(city.transferWindowMins * 60);
+                            playTransitTone('gentle');
+                          }}
+                          className={`p-4 rounded-xl border transition cursor-pointer space-y-2 ${
+                            isSelected
+                              ? 'bg-[#EFF6FF] dark:bg-blue-950/40 border-[#0070F3] ring-1 ring-[#0070F3] shadow-md shadow-blue-500/10'
+                              : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800 hover:border-blue-400'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-black text-sm text-slate-900 dark:text-white">{city.name}</span>
+                            <span className="text-xs font-mono font-bold text-[#0060EA] dark:text-[#38BDF8]">
+                              ${city.fare.toLocaleString('es-CO')} COP
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                            <div>Tarjeta oficial: <strong className="text-slate-800 dark:text-slate-200">{city.cardBrand}</strong></div>
+                            <div>Ventana de transbordo: <strong className="text-[#0060EA] dark:text-[#38BDF8]">{city.transferWindowMins} minutos</strong></div>
+                            <div className="truncate">Cobertura: {city.coverage}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PESTAÑA 3: TRANSBORDO */}
+            {activeTab === 'transbordo' && (
+              <div className="space-y-4 text-left">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                        Ventana de Trasbordo Activa ($0 COP)
+                      </span>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                        Control de Tiempo en {currentCity.name}
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black font-mono text-[#0060EA] dark:text-[#38BDF8]">
+                        {formatTime(transferTimeSecs)}
+                      </div>
+                      <span className="text-[11px] text-slate-500">Tiempo restante a $0 COP</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    En {currentCity.shortName}, tu pasaje incluye hasta <strong>2 transbordos gratuitos ($0 COP)</strong> dentro de una ventana de <strong>{currentCity.transferWindowMins} minutos</strong> tras la primera validación.
+                  </p>
+
+                  {/* Indicador de Ahorro Acumulado */}
+                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 block font-medium">Ahorro acumulado en este trayecto:</span>
+                      <span className="text-2xl font-mono font-black text-[#0060EA] dark:text-[#38BDF8]">
+                        +${transferSavingsCop.toLocaleString('es-CO')} COP
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferTimeSecs(currentCity.transferWindowMins * 60);
+                        setIsTransferActive(true);
+                        setTransferSavingsCop(prev => prev + currentCity.fare);
+                        playTransitTone('transfer');
+                        triggerHaptic([80, 80]);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                    >
+                      + Simular Transbordo Ahora
+                    </button>
+                  </div>
+
+                  {/* Consejos Clave para No Perder el Transbordo */}
+                  <div className="space-y-2 pt-1 text-xs">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block">Reglas oficiales para que tu transbordo aplique a $0:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <strong className="text-slate-900 dark:text-white block mb-0.5">Misma Tarjeta</strong>
+                        Debes usar el mismo plástico personalizado en cada validador.
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <strong className="text-slate-900 dark:text-white block mb-0.5">Diferente Ruta</strong>
+                        No aplica si abordas exactamente el mismo código de bus en el mismo sentido.
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <strong className="text-slate-900 dark:text-white block mb-0.5">Antes del Vencimiento</strong>
+                        Pasa tu tarjeta antes de que el cronómetro llegue a 00m 00s.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PESTAÑA 4: MI TARJETA (TRANSMIPASS, TRANSMIBICI Y RECARGAS NEQUI/DAVIPLATA/PSE) */}
+            {activeTab === 'tarjeta' && (
+              <div className="space-y-4 text-left">
+                {/* Visualizador de la Tarjeta Física */}
+                <div className={`p-5 sm:p-6 rounded-2xl text-white shadow-xl relative overflow-hidden space-y-4 ${
+                  selectedCardSkin === 'roja'
+                    ? 'bg-gradient-to-br from-[#7F1D1D] via-[#B91C1C] to-[#991B1B]'
+                    : selectedCardSkin === 'verde'
+                    ? 'bg-gradient-to-br from-[#14532D] via-[#15803D] to-[#166534]'
+                    : selectedCardSkin === 'civica'
+                    ? 'bg-gradient-to-br from-[#006644] via-[#00875A] to-[#044B34]'
+                    : 'bg-gradient-to-br from-[#1E3A8A] via-[#1D4ED8] to-[#C2410C]'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] tracking-widest font-mono uppercase bg-black/40 px-2 py-0.5 rounded">
+                        {selectedCardSkin === 'verde' ? 'AL PORTADOR' : 'PERSONALIZADA CON CÉDULA'}
+                      </span>
+                      <h4 className="text-lg font-black mt-1">
+                        {currentCity.cardBrand} {selectedCardSkin === 'roja' ? 'Plus' : ''}
+                      </h4>
+                    </div>
+                    <span className="text-xl font-mono font-bold">NFC CHIP</span>
+                  </div>
+
+                  <div className="py-1">
+                    <span className="text-[11px] text-white/80 block">Saldo Disponible</span>
+                    <span className="text-3xl sm:text-4xl font-mono font-black tracking-tight">
+                      ${cardBalanceCop.toLocaleString('es-CO')} COP
+                    </span>
+                    <span className="text-[11px] text-white/90 block mt-0.5">
+                      Equivalente a ~{Math.floor(cardBalanceCop / currentCity.fare)} pasajes en {currentCity.shortName}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-white/20 text-xs font-mono">
+                    <span>1029-4820-9182-4710</span>
+                    <span>2 Créditos de Emergencia Activos</span>
+                  </div>
+                </div>
+
+                {/* Selector de Plásticos Físicos */}
+                <div className="flex gap-2 flex-wrap text-xs">
+                  <span className="text-slate-500 font-bold self-center">Cambiar skin física:</span>
+                  {[
+                    { id: 'roja', label: 'TuLlave Roja' },
+                    { id: 'verde', label: 'TuLlave Verde' },
+                    { id: 'civica', label: 'Cívica Metro' },
+                    { id: 'mio', label: 'MÍO Cali' },
+                  ].map(skin => (
+                    <button
+                      key={skin.id}
+                      type="button"
+                      onClick={() => setSelectedCardSkin(skin.id)}
+                      className={`px-2.5 py-1 rounded-lg border font-bold transition cursor-pointer ${
+                        selectedCardSkin === skin.id
+                          ? 'bg-[#0070F3] text-white border-[#0070F3]'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {skin.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* MÓDULO DE RECARGAS DIGITALES (NEQUI, DAVIPLATA, BRE-B, PSE) */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg inline-block">
+                    Recarga Digital de Saldo
+                  </span>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Recarga desde tu billetera digital y activa tu saldo al pasar por el tótem rojo de la estación:
+                  </p>
+
+                  {/* Selector de Método de Pago */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {[
+                      { id: 'nequi', label: '🟣 Nequi' },
+                      { id: 'daviplata', label: '🔴 Daviplata' },
+                      { id: 'breb', label: '⚡ Llave Bre-B' },
+                      { id: 'pse', label: '🏦 PSE / Débito' },
+                    ].map(met => (
+                      <button
+                        key={met.id}
+                        type="button"
+                        onClick={() => setRechargeMethod(met.id)}
+                        className={`p-2.5 rounded-xl border text-center font-bold transition cursor-pointer ${
+                          rechargeMethod === met.id
+                            ? 'bg-[#EFF6FF] dark:bg-blue-950 text-[#0060EA] dark:text-[#38BDF8] border-[#0070F3]'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {met.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selector de Monto */}
+                  <div className="flex gap-2 flex-wrap pt-1">
+                    {[10000, 20000, 50000, 100000].map(amt => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setRechargeAmount(amt)}
+                        className={`px-3 py-1.5 rounded-lg font-mono font-bold text-xs border transition cursor-pointer ${
+                          rechargeAmount === amt
+                            ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white border-[#0070F3]'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        ${amt.toLocaleString('es-CO')} COP
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleExecuteRecharge}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/25 cursor-pointer transition active:scale-95"
+                  >
+                    Confirmar Recarga de ${rechargeAmount.toLocaleString('es-CO')} COP por {rechargeMethod.toUpperCase()}
+                  </button>
+
+                  {rechargeFeedback && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-xs font-bold text-[#0060EA] dark:text-[#38BDF8] rounded-xl">
+                      {rechargeFeedback}
+                    </div>
+                  )}
+                </div>
+
+                {/* TRANSMIPASS (ABONO MENSUAL DE 65 VIAJES) */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                        TransMiPass Oficial
+                      </span>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mt-1">Abono Mensual de 65 Viajes</h4>
+                    </div>
+                    <span className="text-xs font-bold text-[#0060EA] dark:text-[#38BDF8] font-mono">
+                      Ahorro &gt; $70.000 COP/mes
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    Tarifa plana para viajeros frecuentes. Adquiere tu paquete mensual a precio preferencial y despreocúpate por recargar a diario.
+                  </p>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-bold">Estado del ciclo mensual:</span>
+                      <strong className="text-slate-900 dark:text-white">42 de 65 viajes utilizados</strong>
+                    </div>
+                    <span className="font-mono font-bold text-[#0060EA] dark:text-[#38BDF8]">23 viajes disponibles</span>
+                  </div>
+                </div>
+
+                {/* TRANSMIBICI (MULTIMODALIDAD GRATUITA & RECOMPENSAS) */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0070F3]/15 via-[#0060EA]/5 to-transparent border border-[#0070F3]/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🚲</span>
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">TransMiBici · Multimodalidad</h4>
+                        <span className="text-[11px] text-[#0060EA] dark:text-[#38BDF8] font-bold">
+                          Cicloparqueaderos cubiertos y vigilados a $0 COP
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2 py-0.5 rounded-full">
+                      Incentivo Oficial
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-slate-700 dark:text-slate-300">Validaciones Bici + Bus:</span>
+                      <span className="text-[#0060EA] dark:text-[#38BDF8] font-mono">{transmiBiciValidations} / 30 viajes</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#0080FF] to-[#0060EA]"
+                        style={{ width: `${(transmiBiciValidations / 30) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                      ¡Completa 30 viajes combinados y reclama 1 pasaje gratis automáticamente en tu tarjeta!
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransmiBiciValidations(prev => Math.min(30, prev + 1));
+                      playTransitTone('transfer');
+                      triggerHaptic([70]);
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                  >
+                    + Registrar Bici + Bus Hoy (+1 Validación)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* PESTAÑA 5: ALERTAS VIALES & MÓDULO DE SISMOS DEL SGC */}
+            {activeTab === 'alertas' && (
+              <div className="space-y-4 text-left">
+                {/* Clima de la Ciudad */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Clima actual en {currentCity.shortName}:</span>
+                    <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">17°C · Parcialmente nublado</div>
+                    <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">⚠️ 65% probabilidad de lluvia en la tarde</span>
+                  </div>
+                  <span className="text-3xl">🌦️</span>
+                </div>
+
+                {/* Filtro de Incidentes */}
+                <div className="flex gap-1.5 flex-wrap text-xs">
+                  {['all', 'Trancón', 'Movilización', 'Obras'].map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setAlertsFilter(cat)}
+                      className={`px-3 py-1 rounded-lg font-bold border transition cursor-pointer ${
+                        alertsFilter === cat
+                          ? 'bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white border-[#0070F3]'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      {cat === 'all' ? 'Todas las Alertas' : cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tarjetas de Incidentes */}
+                <div className="space-y-2.5">
+                  {INITIAL_INCIDENTS.filter(i => alertsFilter === 'all' || i.category === alertsFilter).map(item => (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#0070F3]">
+                          {item.category}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">{item.timeAgo}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{item.title}</h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">{item.desc}</p>
+                      <span className="text-[10px] text-[#0060EA] dark:text-[#38BDF8] font-bold block pt-1">
+                        📍 {item.corridor}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ========================================================= */}
+                {/* MÓDULO DE SISMOS EN VIVO DEL SGC (SERVICIO GEOLÓGICO COLOMBIANO) */}
+                {/* ========================================================= */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-transparent to-red-500/10 border border-amber-500/30 dark:border-amber-500/40 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 flex items-center justify-center shrink-0">
+                        ⚡
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Alerta Sísmica & Protocolo SGC
+                          </h4>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-[#0060EA] dark:text-[#38BDF8] border border-blue-200 dark:border-blue-800 font-mono">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070F3] animate-ping" />
+                            SGC En Vivo
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                          Monitoreo de la Red Sismológica Nacional y seguridad en estaciones de transporte.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleTestSeismic}
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/25 cursor-pointer shrink-0"
+                    >
+                      {isTestingSeismic ? 'Simulacro Activo...' : 'Probar Alarma Sísmica'}
+                    </button>
+                  </div>
+
+                  {seismicTestFeedback && (
+                    <div className="p-3 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-xs font-bold text-amber-900 dark:text-amber-200 rounded-xl">
+                      {seismicTestFeedback}
+                    </div>
+                  )}
+
+                  {/* Estado SGC y Último Sismo */}
+                  <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-slate-700 dark:text-slate-300">Último sismo monitoreado:</span>
+                      <span className="font-mono text-[#0060EA] dark:text-[#38BDF8]">Magnitud {LATEST_SGC_EARTHQUAKE.magnitude}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 space-y-0.5">
+                      <div>Epicentro: <strong className="text-slate-800 dark:text-slate-200">{LATEST_SGC_EARTHQUAKE.epicentro}</strong></div>
+                      <div>Profundidad: {LATEST_SGC_EARTHQUAKE.profundidad} · Fecha: {LATEST_SGC_EARTHQUAKE.eventDate}</div>
+                      <div className="text-emerald-600 dark:text-emerald-400 font-bold pt-1">
+                        ✓ {LATEST_SGC_EARTHQUAKE.impactoTransporte}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Protocolo Oficial de 3 Pasos en Caso de Temblor */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                      Protocolo oficial durante un sismo en transporte masivo:
+                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span className="w-5 h-5 rounded-full bg-[#0070F3] text-white font-bold text-[10px] inline-flex items-center justify-center">1</span>
+                        <strong className="text-slate-900 dark:text-white block">Dentro del Bus / Tren</strong>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                          El conductor se detendrá fuera de puentes. Sujétate firmemente y no bajes en movimiento.
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span className="w-5 h-5 rounded-full bg-[#0070F3] text-white font-bold text-[10px] inline-flex items-center justify-center">2</span>
+                        <strong className="text-slate-900 dark:text-white block">En Estación o Andén</strong>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                          Aléjate de ventanales y bordes de la plataforma. Cubre tu cabeza en posición de seguridad.
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span className="w-5 h-5 rounded-full bg-[#0070F3] text-white font-bold text-[10px] inline-flex items-center justify-center">3</span>
+                        <strong className="text-slate-900 dark:text-white block">Evacuación Guiada</strong>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                          Sigue al personal de estación al punto de encuentro exterior sin usar ascensores.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Líneas Telefónicas de Emergencia */}
+                  <div className="flex gap-2 flex-wrap text-xs pt-1">
+                    <a href="tel:123" className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 font-bold text-[#0060EA] dark:text-[#38BDF8]">
+                      🚨 Línea 123 Nacional
+                    </a>
+                    <a href="tel:132" className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 font-bold text-red-600 dark:text-red-300">
+                      🚑 132 Cruz Roja
+                    </a>
+                    <a href="tel:144" className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 font-bold text-amber-700 dark:text-amber-300">
+                      🛡️ 144 Defensa Civil
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* =============================================================== */}
+          {/* MODAL DE APOYO & SUBSIDIOS ($0 COP) */}
+          {/* =============================================================== */}
+          {isSupportModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+              <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 text-left space-y-4 max-h-[90vh] overflow-y-auto custom-scroll">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Modo Apoyo, Subsidios & Accesibilidad
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsSupportModalOpen(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  {/* Selector de Tamaño de Texto */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">Texto Aumentado (Baja Visión)</strong>
+                      <span className="text-[11px] text-slate-500">Escala los textos principales a tamaño grande.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLargeTextMode(prev => !prev)}
+                      className={`px-3 py-1 rounded-lg font-bold border transition ${
+                        largeTextMode
+                          ? 'bg-[#0070F3] text-white border-[#0070F3]'
+                          : 'bg-white dark:bg-slate-900 border-slate-300 text-slate-600'
+                      }`}
+                    >
+                      {largeTextMode ? 'Activo' : 'Inactivo'}
+                    </button>
+                  </div>
+
+                  <strong className="text-slate-800 dark:text-slate-200 block pt-1">
+                    Activar Perfil de Subsidio Oficial ($0 COP):
+                  </strong>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { id: 'sisben', label: 'Sisbén A / B / C', desc: 'Tarifa preferencial para población prioritaria' },
+                      { id: 'adulto', label: 'Adulto Mayor (+62)', desc: 'Descuento mensual directo en tu tarjeta' },
+                      { id: 'estudio', label: 'Convenio Estudiantil', desc: 'Colegios y universidades autorizadas' },
+                      { id: 'movilidad', label: 'Movilidad Reducida', desc: 'Acceso y asistencia preferencial' },
+                    ].map(sub => (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          setSubsidizedProfile(sub.id);
+                          playTransitTone('transfer');
+                          triggerHaptic([100]);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                          subsidizedProfile === sub.id
+                            ? 'bg-[#EFF6FF] dark:bg-blue-950 text-[#0060EA] dark:text-[#38BDF8] border-[#0070F3] ring-1 ring-[#0070F3]'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <div className="font-bold">{sub.label}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{sub.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {subsidizedProfile && (
+                    <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-[#0060EA] dark:text-[#38BDF8] font-bold text-center">
+                      ✓ Perfil con subsidio asignado en tu aplicación
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSupportModalOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Guardar Preferencias
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* =============================================================== */}
+          {/* MODAL DE TUTORIAL GUIADO */}
+          {/* =============================================================== */}
+          {isTutorialOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+              <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 text-left space-y-4 max-h-[90vh] overflow-y-auto custom-scroll">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[#0080FF] to-[#0060EA] px-2.5 py-0.5 rounded-lg">
+                      Guía Rápida
+                    </span>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">Cómo Usar A Tiempo</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTutorialOpen(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">1. Salida Exacta & Ubicador de Bus:</strong>
+                    Consulta en qué vagón o puerta para tu bus y mira cuántos minutos tienes para salir de casa antes de que llegue.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">2. Alarma «Avísame al llegar»:</strong>
+                    Activa la alarma para recibir un tono suave 2 estaciones antes de tu parada final y viajar sin temor a pasarte.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">3. Ventana de Transbordo ($0 COP):</strong>
+                    Controla tus 125 minutos de transbordo gratuito y mira tu ahorro acumulado en cada viaje.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">4. Tarjeta, TransMiBici & Recargas:</strong>
+                    Recarga con Nequi, Daviplata o PSE y gana pasajes gratis registrando tu bicicleta en los cicloparqueaderos oficiales.
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">5. Alertas & Sismos del SGC:</strong>
+                    Infórmate del estado de las vías y sigue el protocolo oficial sísmico con líneas directas de emergencia.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTutorialOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold text-xs shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Entendido, ¡Comenzar!
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* =============================================================== */}
+          {/* PIE DE PÁGINA */}
+          {/* =============================================================== */}
+          <footer className="w-full border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-[#070D18]/50">
+            <p>A Tiempo · Tu salida exacta en transporte masivo en Colombia</p>
+          </footer>
+        </div>
+      );
+    }
+
+    // Renderizar aplicación
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ATiempoApp />);
+  </script>
+</body>
+</html>

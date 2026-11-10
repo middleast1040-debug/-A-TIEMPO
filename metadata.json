@@ -1,0 +1,8 @@
+{
+  "name": "A Tiempo ",
+  "description": "Track your Bus schedules and get precise departure alerts to never wait at the stop again.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
