@@ -11,7 +11,7 @@
   "theme_color": "#070D18",
   "lang": "es-CO",
   "categories": ["travel", "navigation", "utilities"],
-"icons": [
+  "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
