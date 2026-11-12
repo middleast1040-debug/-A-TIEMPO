@@ -1,5 +1,5 @@
 // A Tiempo - Service Worker para PWA Offline & Precaching
-const CACHE_NAME = 'atiempo-pwa-v6';
+const CACHE_NAME = 'atiempo-pwa-v7';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
