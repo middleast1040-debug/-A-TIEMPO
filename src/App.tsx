@@ -636,7 +636,6 @@ export default function App() {
     return { checked, total: checklist.length };
   }, [checklist]);
 
-  // Cálculo de ritmo de caminata sugerido según segundos restantes
   const walkPaceAdvice = useMemo(() => {
     if (!departureCalculation) return { label: 'Ritmo Normal', color: 'text-emerald-400' };
     const sec = departureCalculation.totalSecondsRemaining;
@@ -688,7 +687,6 @@ export default function App() {
                 </span>
               </h1>
 
-              {/* Telemetría Biométrica / Ritmo */}
               <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
                 <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                   <Footprints className="w-4 h-4 text-[#0070F3] dark:text-cyan-400" />
@@ -701,7 +699,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Acciones Directas: Radar Único y Monitor */}
             <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
               <button
                 type="button"
