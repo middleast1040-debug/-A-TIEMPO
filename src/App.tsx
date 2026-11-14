@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import os
+
+app_code = """import React, { useState, useEffect, useRef, useMemo } from 'react';
 import BogotaApp from './components/BogotaApp';
 import {
   Route,
@@ -126,7 +128,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<AppTab>('planear');
 
-  // Auto-scroll to top smoothly whenever switching between tabs
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
@@ -175,7 +176,6 @@ export default function App() {
     return 'Portal Usme';
   });
 
-  // App Travel Activity & Silencing State (inactive | monitoring | arrived)
   const [travelState, setTravelState] = useState<TravelActivityState>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TRAVEL_STATE) as TravelActivityState;
@@ -183,7 +183,7 @@ export default function App() {
     } catch {
       // fallback
     }
-    return 'inactive'; // Default: standby / silence
+    return 'inactive';
   });
 
   const [walkingMinutes, setWalkingMinutes] = useState<number>(() => {
@@ -206,7 +206,6 @@ export default function App() {
     return 1;
   });
 
-  // Intermediate Destinations / Stops Chain (Multiple Waypoints)
   const [intermediateStops, setIntermediateStops] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('ontime_intermediate_stops_v1');
@@ -253,10 +252,8 @@ export default function App() {
     }
   };
 
-  // Modern Dark Interactive Map Modal State
   const [isInteractiveMapOpen, setIsInteractiveMapOpen] = useState(false);
 
-  // Data Saver Mode State
   const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(() => {
     try {
       return localStorage.getItem('atiempo_data_saver_v1') === 'true';
@@ -277,7 +274,6 @@ export default function App() {
     });
   };
 
-  // E2EE Protected Favorites List
   const [favorites, setFavorites] = useState<FavoriteDestination[]>(() => {
     return encryptedLocalStorageGet<FavoriteDestination[]>(STORAGE_KEYS.FAVORITES, INITIAL_FAVORITES);
   });
@@ -309,14 +305,12 @@ export default function App() {
   const [hasCalculated, setHasCalculated] = useState(true);
   const [isConsulting, setIsConsulting] = useState(false);
 
-  // Transit Cards State
   const [tullaveCards, setTullaveCards] = useState<TuLlaveCard[]>(() => getStoredCards());
   const [tullaveTransactions, setTullaveTransactions] = useState<TuLlaveTransaction[]>(() => getStoredTransactions());
   const [isTuLlaveModalOpen, setIsTuLlaveModalOpen] = useState(false);
   const [tuLlaveInitialTab, setTuLlaveInitialTab] = useState<TuLlaveTab | 'totems'>('saldo');
   const [isQuickRefreshingTuLlave, setIsQuickRefreshingTuLlave] = useState(false);
 
-  // Subscription State & Widget Modal State
   const [isSubscribed, setIsSubscribed] = useState<boolean>(() => {
     try {
       return localStorage.getItem('atiempo_pro_subscription_v1') === 'true';
@@ -335,7 +329,6 @@ export default function App() {
   });
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  // Offline Mode State & Offline Cache
   const [isOffline, setIsOffline] = useState<boolean>(() =>
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
@@ -367,7 +360,6 @@ export default function App() {
     };
   }, []);
 
-  // Proximity Alarm ('Avísame al llegar - 2 paradas antes')
   const [isWakeUpAlarmActive, setIsWakeUpAlarmActive] = useState<boolean>(() => {
     try {
       return localStorage.getItem('atiempo_wakeup_alarm_v1') === 'true';
@@ -388,7 +380,6 @@ export default function App() {
     });
   };
 
-  // Browser Background Notifications Permission State
   const [pushPermission, setPushPermission] = useState<string>(() =>
     getNotificationPermission()
   );
@@ -398,7 +389,6 @@ export default function App() {
     setPushPermission(res);
   };
 
-  // Modo Noche (Dark / High-Contrast Night Mode Toggle)
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>(() => {
     try {
       const saved = localStorage.getItem('atiempo_theme_mode_v1');
@@ -428,7 +418,6 @@ export default function App() {
     setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Modo Apoyo / Accesibilidad Universal (Voz, Baja Visión, Subsidios)
   const [accessibilitySettings, setAccessibilitySettings] = useState<AccessibilitySettings>(() => {
     try {
       const saved = localStorage.getItem('atiempo_accessibility_support_v1');
@@ -462,7 +451,6 @@ export default function App() {
     return tullaveCards.find((c) => c.isDefault) || tullaveCards[0];
   }, [tullaveCards, selectedCityId]);
 
-  // When city changes, update routes, stops, cards, and default settings
   const handleSelectCity = (cityId: string) => {
     setSelectedCityId(cityId);
     localStorage.setItem(STORAGE_KEYS.CITY, cityId);
@@ -479,11 +467,9 @@ export default function App() {
       localStorage.setItem(STORAGE_KEYS.ORIGIN_STOP, firstRoute.popularStop || firstRoute.origin);
       localStorage.setItem(STORAGE_KEYS.DESTINATION_STOP, firstRoute.destination);
     }
-    // Standby mode when switching city
     setTravelState('inactive');
     localStorage.setItem(STORAGE_KEYS.TRAVEL_STATE, 'inactive');
 
-    // Make city card active
     const match = tullaveCards.find((c) => c.cityId === cityId);
     if (match) {
       const updated = tullaveCards.map((c) => ({
@@ -493,7 +479,6 @@ export default function App() {
       setTullaveCards(updated);
       saveStoredCards(updated);
     }
-    // Switch to planear tab so user immediately sees the new city's routes and stations
     setActiveTab('planear');
   };
 
@@ -581,7 +566,6 @@ export default function App() {
   const lastProximityAlarmRef = useRef<number>(0);
   const hasNotifiedLowBalanceRef = useRef<boolean>(false);
 
-  // Emergency Low Balance Push Notification check (alert once per session)
   useEffect(() => {
     if (!activeTuLlaveCard) return;
     const isLow = activeTuLlaveCard.balance < currentCitySystem.fare * 2;
@@ -595,9 +579,6 @@ export default function App() {
     }
   }, [activeTuLlaveCard, currentCitySystem]);
 
-  // CRITICAL AUDIO, HAPTIC & BACKGROUND PUSH NOTIFICATION LOGIC:
-  // Alarms, vibrations & push alerts ONLY trigger when travelState === 'monitoring'.
-  // When travelState === 'inactive' (Modo Reposo) or 'arrived' (¡Ya llegué!), it is 100% SILENT.
   useEffect(() => {
     if (travelState !== 'monitoring' || !departureCalculation) {
       return;
@@ -606,7 +587,6 @@ export default function App() {
     const remainingSec = departureCalculation.totalSecondsRemaining;
     const targetBus = departureCalculation.targetBusArrivalMs;
 
-    // 1. Departure alert (at 2 minutes and at 0 seconds)
     if (isAlarmActive) {
       if (remainingSec <= 120 && remainingSec > 110 && lastAlarmedBusRef.current !== targetBus) {
         lastAlarmedBusRef.current = targetBus;
@@ -614,7 +594,6 @@ export default function App() {
       } else if (remainingSec === 0 && lastAlarmedBusRef.current !== targetBus + 1) {
         lastAlarmedBusRef.current = targetBus + 1;
         playDepartureChime('urgent');
-        // Dispatch background push notification (shows even if minimized or backgrounded)
         sendDeparturePushNotification(
           currentRoute.code,
           originStop || currentRoute.popularStop,
@@ -623,12 +602,10 @@ export default function App() {
       }
     }
 
-    // 2. Proximity Wake-Up Alarm ('Despiértame al llegar' - 2 paradas antes)
     if (isWakeUpAlarmActive) {
       const transitMins = currentRoute.transitMinutes || 18;
       const destinationTimeMs = targetBus + transitMins * 60 * 1000;
       const msUntilDestination = destinationTimeMs - currentTimeMs;
-      // ~4 minutes = ~2 stops away
       if (msUntilDestination <= 4 * 60 * 1000 && msUntilDestination > 3.4 * 60 * 1000) {
         if (lastProximityAlarmRef.current !== targetBus) {
           lastProximityAlarmRef.current = targetBus;
@@ -731,7 +708,6 @@ export default function App() {
           : 'bg-[#070D18] text-slate-100'
       } ${accessibilitySettings.largeText ? 'text-base sm:text-lg' : ''}`}
     >
-      {/* Top Header with Diurno-Nocturno & Checklist */}
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={checklistCount}
@@ -740,15 +716,13 @@ export default function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
-      {/* Main Content Area - Strictly contained within margins */}
       <main className="max-w-4xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-8 box-border overflow-x-clip">
         
-        {/* CONDICIONAL BOGOTÁ CORE CON BOGOTAAPP */}
+        {/* CONDICIONAL: SI ES BOGOTÁ, CARGA BOGOTAAPP TÁCTICA. SINO, EL SISTEMA MULTICIUDAD ORIGINAL */}
         {selectedCityId === 'bogota' ? (
           <BogotaApp />
         ) : (
           <>
-            {/* Clean, Modern Intro (Zero icon clutter) */}
             <section className="text-center max-w-xl mx-auto pt-2 pb-1 space-y-1.5 px-2">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight break-words">
                 Sal a la hora exacta
@@ -757,7 +731,6 @@ export default function App() {
                 Calculamos el minuto para salir de tu puerta y subirte al bus sin esperar en el andén.
               </p>
 
-              {/* Simple, unboxed status note */}
               <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
                 <span className="font-bold text-slate-800 dark:text-slate-200">{currentCitySystem.name}</span>
                 <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
@@ -773,84 +746,79 @@ export default function App() {
               </div>
             </section>
 
-              {/* Cache Sync Feedback Toast */}
-              {cacheSyncToast && (
-                <div className="p-3 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 rounded-2xl text-xs text-[#0060EA] dark:text-[#38BDF8] flex items-center justify-center gap-2 max-w-md mx-auto shadow-xs animate-in fade-in">
-                  <CheckCircle2 className="w-4 h-4 text-[#0070F3] dark:text-[#38BDF8] shrink-0" />
-                  <span className="font-bold">{cacheSyncToast}</span>
-                </div>
-              )}
+            {cacheSyncToast && (
+              <div className="p-3 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 rounded-2xl text-xs text-[#0060EA] dark:text-[#38BDF8] flex items-center justify-center gap-2 max-w-md mx-auto shadow-xs animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-[#0070F3] dark:text-[#38BDF8] shrink-0" />
+                <span className="font-bold">{cacheSyncToast}</span>
+              </div>
+            )}
 
-              {/* Subterranean / Offline Mode Banner */}
-              {isOffline && (
-                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-500/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 max-w-lg mx-auto shadow-sm">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <div className="text-left leading-tight min-w-0">
-                      <strong className="block font-bold truncate">Modo Sin Conexión Activo</strong>
-                      <span className="text-[11px] text-amber-800 dark:text-amber-300 block truncate">
-                        {cacheStatus.routesCount} rutas y horarios protegidos en la memoria local.
-                      </span>
-                    </div>
+            {isOffline && (
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-500/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 max-w-lg mx-auto shadow-sm">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <div className="text-left leading-tight min-w-0">
+                    <strong className="block font-bold truncate">Modo Sin Conexión Activo</strong>
+                    <span className="text-[11px] text-amber-800 dark:text-amber-300 block truncate">
+                      {cacheStatus.routesCount} rutas y horarios protegidos en la memoria local.
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleSyncCache}
-                    className="px-2.5 py-1 text-[11px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-100 hover:bg-amber-300 dark:hover:bg-amber-800 rounded-lg transition shrink-0 cursor-pointer"
-                  >
-                    Verificar
-                  </button>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={handleSyncCache}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-100 hover:bg-amber-300 dark:hover:bg-amber-800 rounded-lg transition shrink-0 cursor-pointer"
+                >
+                  Verificar
+                </button>
+              </div>
+            )}
 
-              {/* Sleek Trip Activity Status Capsule */}
-              <div className="pt-0.5 flex items-center justify-center w-full px-2">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#0E1726] border border-slate-200 dark:border-[#1C2A3E] text-xs shadow-xs max-w-full min-w-0">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${travelState === 'monitoring' ? 'bg-[#0070F3] dark:bg-[#38BDF8] animate-pulse' : 'bg-slate-400'}`} />
-                  <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[180px] sm:max-w-xs">
-                    {travelState === 'monitoring'
-                      ? `Monitoreando salida hacia ${destinationStop}`
-                      : travelState === 'arrived'
-                      ? 'Viaje completado'
-                      : 'Modo Reposo (Alarmas en silencio)'}
-                  </span>
-                  {travelState === 'monitoring' ? (
-                    <div className="flex items-center gap-1.5 ml-1">
-                      <button
-                        type="button"
-                        onClick={() => setTravelState('arrived')}
-                        className="px-2.5 py-0.5 bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold rounded-lg text-[10px] cursor-pointer"
-                      >
-                        ¡Ya llegué!
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTravelState('inactive')}
-                        className="px-2 py-0.5 bg-slate-100 dark:bg-[#070D18] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg text-[10px] cursor-pointer"
-                      >
-                        Pausar
-                      </button>
-                    </div>
-                  ) : (
+            <div className="pt-0.5 flex items-center justify-center w-full px-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#0E1726] border border-slate-200 dark:border-[#1C2A3E] text-xs shadow-xs max-w-full min-w-0">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${travelState === 'monitoring' ? 'bg-[#0070F3] dark:bg-[#38BDF8] animate-pulse' : 'bg-slate-400'}`} />
+                <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[180px] sm:max-w-xs">
+                  {travelState === 'monitoring'
+                    ? `Monitoreando salida hacia ${destinationStop}`
+                    : travelState === 'arrived'
+                    ? 'Viaje completado'
+                    : 'Modo Reposo (Alarmas en silencio)'}
+                </span>
+                {travelState === 'monitoring' ? (
+                  <div className="flex items-center gap-1.5 ml-1">
                     <button
                       type="button"
-                      onClick={() => {
-                        setTravelState('monitoring');
-                        setIsAlarmActive(true);
-                      }}
-                      className="px-2.5 py-0.5 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 text-[#0060EA] dark:text-[#38BDF8] font-bold rounded-lg text-[10px] cursor-pointer ml-1 inline-flex items-center gap-1"
+                      onClick={() => setTravelState('arrived')}
+                      className="px-2.5 py-0.5 bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold rounded-lg text-[10px] cursor-pointer"
                     >
-                      <Play className="w-2.5 h-2.5 fill-current" strokeWidth={2} />
-                      <span>Activar Salida</span>
+                      ¡Ya llegué!
                     </button>
-                  )}
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => setTravelState('inactive')}
+                      className="px-2 py-0.5 bg-slate-100 dark:bg-[#070D18] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg text-[10px] cursor-pointer"
+                    >
+                      Pausar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTravelState('monitoring');
+                      setIsAlarmActive(true);
+                    }}
+                    className="px-2.5 py-0.5 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 text-[#0060EA] dark:text-[#38BDF8] font-bold rounded-lg text-[10px] cursor-pointer ml-1 inline-flex items-center gap-1"
+                  >
+                    <Play className="w-2.5 h-2.5 fill-current" strokeWidth={2} />
+                    <span>Activar Salida</span>
+                  </button>
+                )}
               </div>
+            </div>
 
-            {/* Main Tabs Container */}
             {activeTab === 'planear' && (
               <div className="space-y-5">
-                {/* Quick Destination Hub ("¿A dónde vas hoy?") */}
                 <QuickDestinationHub
                   citySystem={currentCitySystem}
                   currentDestination={destinationStop}
@@ -862,7 +830,6 @@ export default function App() {
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  {/* Column 1: Selector + Schematic Tube Strip + Transit Card */}
                   <section className="lg:col-span-6 space-y-5">
                     <RouteSelector
                       routes={routes}
@@ -888,7 +855,6 @@ export default function App() {
                       cityId={currentCitySystem.id}
                     />
 
-                    {/* Schematic Tube Line Diagram */}
                     {currentRoute && (
                       <SchematicTransitStrip
                         route={currentRoute}
@@ -902,7 +868,6 @@ export default function App() {
                       />
                     )}
 
-                    {/* Transit Card Widget */}
                     {activeTuLlaveCard && (
                       <TuLlaveQuickWidget
                         card={activeTuLlaveCard}
@@ -915,7 +880,6 @@ export default function App() {
                     )}
                   </section>
 
-                  {/* Column 2: Result Card & Favorites */}
                   <section className="lg:col-span-6 space-y-5">
                     {hasCalculated && departureCalculation && (
                       <div id="resultadoCard">
@@ -944,7 +908,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Ubicador Rápido de Buses por Código o Nombre */}
                     <BusLocatorSection
                       routes={routes}
                       cityName={currentCitySystem.name}
@@ -970,7 +933,6 @@ export default function App() {
                       onAddCurrentAsFavorite={handleToggleFavorite}
                     />
 
-                    {/* Calendario de Rutas Frecuentes & Recordatorios Semanales */}
                     <WeeklyRouteSchedule
                       routes={routes}
                       currentRouteId={selectedRouteId}
@@ -988,7 +950,6 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: VENTANA DE TRANSBORDO $0 COP */}
             {activeTab === 'transbordo' && (
               <div className="space-y-6">
                 <TransferWindowWidget
@@ -998,7 +959,6 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: RUTA SUGERIDA (Door-to-door timeline) */}
             {activeTab === 'sugerida' && currentRoute && (
               <div className="space-y-6">
                 <SuggestedRouteTimeline
@@ -1024,7 +984,6 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 4: CIUDADES COLOMBIA (Con sección de Mapas integrada) */}
             {activeTab === 'ciudades' && (
               <CitiesExplorerTab
                 selectedCityId={selectedCityId}
@@ -1037,12 +996,10 @@ export default function App() {
               />
             )}
 
-            {/* TAB 5: NOTICIAS & CLIMA */}
             {activeTab === 'noticias' && (
               <BogotaNewsSection citySystem={currentCitySystem} />
             )}
 
-            {/* Unobtrusive Subscription Section with App Synopsis */}
             <SubscriptionFooterSection
               isSubscribed={isSubscribed}
               onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
@@ -1054,7 +1011,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Mobile-First Fixed Bottom Navigation Dock */}
       <BottomNavDock
         activeTab={activeTab === 'sugerida' ? 'planear' : (activeTab as AppNavTab)}
         onSelectTab={(tab) => {
@@ -1067,7 +1023,6 @@ export default function App() {
         cardBalance={activeTuLlaveCard?.balance}
       />
 
-      {/* Footer matching user's requested text and interactive social media icons */}
       <footer className="w-full border-t border-slate-200 dark:border-[#1C2A3E] bg-white/95 dark:bg-[#070D18]/95 pt-5 pb-24 md:pb-8 text-xs text-slate-500 dark:text-slate-400 mt-auto transition-colors">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col gap-3.5">
           <SocialShareFooter cityName={currentCitySystem.name} currentRouteCode={currentRoute?.code} />
@@ -1085,7 +1040,6 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Modals & Fullscreen Overlays */}
       <ChecklistDrawer
         isOpen={isChecklistOpen}
         onClose={() => setIsChecklistOpen(false)}
@@ -1111,7 +1065,6 @@ export default function App() {
         />
       )}
 
-      {/* Tarjeta de Transporte Balance & Recharge Modal */}
       <TuLlaveManagerModal
         isOpen={isTuLlaveModalOpen}
         onClose={() => setIsTuLlaveModalOpen(false)}
@@ -1123,7 +1076,6 @@ export default function App() {
         activeCityId={selectedCityId}
       />
 
-      {/* A Tiempo Subscription Modal ($4.200 COP / mes - Nequi & Bre-B) */}
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
@@ -1132,7 +1084,6 @@ export default function App() {
         activeCard={activeTuLlaveCard}
       />
 
-      {/* Home Screen Widget Modal */}
       {currentRoute && (
         <HomeScreenWidgetModal
           isOpen={isWidgetModalOpen}
@@ -1147,7 +1098,6 @@ export default function App() {
         />
       )}
 
-      {/* Modo Apoyo & Accesibilidad Universal Modal */}
       <AccessibilitySupportModal
         isOpen={isAccessibilityModalOpen}
         onClose={() => setIsAccessibilityModalOpen(false)}
@@ -1166,14 +1116,12 @@ export default function App() {
         isSubscribed={isSubscribed}
       />
 
-      {/* Step-by-Step App Tutorial Modal */}
       <AppTutorialModal
         isOpen={isTutorialModalOpen}
         onClose={() => setIsTutorialModalOpen(false)}
         cityName={currentCitySystem.name}
       />
 
-      {/* App Settings Modal (Configuración Central & Acceso a Tutorial) */}
       <AppSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
@@ -1216,7 +1164,6 @@ export default function App() {
         routeCode={currentRoute?.code || 'TM'}
       />
 
-      {/* Modern Dark Interactive Transit Map Modal */}
       <InteractiveTransitMapModal
         isOpen={isInteractiveMapOpen}
         onClose={() => setIsInteractiveMapOpen(false)}
@@ -1230,3 +1177,9 @@ export default function App() {
     </div>
   );
 }
+"""
+
+with open('App.tsx', 'w', encoding='utf-8') as f:
+    f.write(app_code)
+
+print("App.tsx actualizado con éxito.")
