@@ -55,7 +55,6 @@ import {
   sendLowBalancePushNotification,
   requestNotificationPermission,
   getNotificationPermission,
-  isNotificationSupported,
 } from './utils/notifications';
 import {
   getOfflineCacheStatus,
@@ -83,9 +82,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CITY);
       if (saved && COLOMBIA_SYSTEMS[saved]) return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'bogota';
   });
 
@@ -107,9 +104,7 @@ export default function App() {
       }
       const saved = localStorage.getItem(STORAGE_KEYS.ROUTES);
       if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return INITIAL_BOGOTA_ROUTES;
   });
 
@@ -117,9 +112,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_ROUTE);
       if (saved) return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'tm-h27';
   });
 
@@ -127,9 +120,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ORIGIN_STOP);
       if (saved) return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'Estación Calle 100';
   });
 
@@ -137,9 +128,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.DESTINATION_STOP);
       if (saved) return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'Portal Usme';
   });
 
@@ -147,9 +136,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TRAVEL_STATE) as TravelActivityState;
       if (saved === 'inactive' || saved === 'monitoring' || saved === 'arrived') return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'inactive';
   });
 
@@ -157,9 +144,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.WALK_MINS);
       if (saved) return Number(saved) || 5;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 5;
   });
 
@@ -167,9 +152,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.BUFFER_MINS);
       if (saved) return Number(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 1;
   });
 
@@ -177,9 +160,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('ontime_intermediate_stops_v1');
       if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return [];
   });
 
@@ -193,9 +174,7 @@ export default function App() {
     setIntermediateStops(next);
     try {
       localStorage.setItem('ontime_intermediate_stops_v1', JSON.stringify(next));
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const handleRemoveIntermediateStop = (idx: number) => {
@@ -203,9 +182,7 @@ export default function App() {
     setIntermediateStops(next);
     try {
       localStorage.setItem('ontime_intermediate_stops_v1', JSON.stringify(next));
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const handleChangeIntermediateStop = (idx: number, stop: string) => {
@@ -214,13 +191,10 @@ export default function App() {
     setIntermediateStops(next);
     try {
       localStorage.setItem('ontime_intermediate_stops_v1', JSON.stringify(next));
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const [isInteractiveMapOpen, setIsInteractiveMapOpen] = useState(false);
-
   const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(() => {
     try {
       return localStorage.getItem('atiempo_data_saver_v1') === 'true';
@@ -234,9 +208,7 @@ export default function App() {
       const next = !prev;
       try {
         localStorage.setItem('atiempo_data_saver_v1', String(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
   };
@@ -249,9 +221,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CHECKLIST);
       if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return INITIAL_CHECKLIST;
   });
 
@@ -259,9 +229,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ALARM);
       if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return true;
   });
 
@@ -311,7 +279,7 @@ export default function App() {
       const updated = getOfflineCacheStatus();
       setCacheStatus(updated);
       setIsSyncingCache(false);
-      setCacheSyncToast(`¡Caché actualizado! ${updated.routesCount} rutas y horarios protegidos sin conexión.`);
+      setCacheSyncToast(`¡Caché actualizado! ${updated.routesCount} rutas protegidas sin conexión.`);
       setTimeout(() => setCacheSyncToast(null), 3500);
     }, 500);
   };
@@ -340,9 +308,7 @@ export default function App() {
       const next = !prev;
       try {
         localStorage.setItem('atiempo_wakeup_alarm_v1', String(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
   };
@@ -360,9 +326,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('atiempo_theme_mode_v1');
       if (saved === 'dark' || saved === 'light') return saved;
-    } catch {
-      // fallback
-    }
+    } catch {}
     return 'dark';
   });
 
@@ -376,9 +340,7 @@ export default function App() {
     }
     try {
       localStorage.setItem('atiempo_theme_mode_v1', themeMode);
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [themeMode]);
 
   const handleToggleTheme = () => {
@@ -389,9 +351,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('atiempo_accessibility_support_v1');
       if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
+    } catch {}
     return {
       speechAssistance: false,
       largeText: false,
@@ -407,9 +367,7 @@ export default function App() {
     setIsSubscribed(true);
     try {
       localStorage.setItem('atiempo_pro_subscription_v1', 'true');
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const activeTuLlaveCard = useMemo(() => {
@@ -685,7 +643,7 @@ export default function App() {
 
       <main className="max-w-4xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-8 box-border overflow-x-clip">
         
-        {/* CONDICIONAL: SI ES BOGOTÁ, CARGA BOGOTAAPP TÁCTICA. SINO, EL SISTEMA MULTICIUDAD ORIGINAL */}
+        {/* CONDICIONAL: SI ES BOGOTÁ, CARGA EL CENTRO TÁCTICO BOGOTAAPP. SINO, EL SISTEMA MULTICIUDAD */}
         {selectedCityId === 'bogota' ? (
           <BogotaApp />
         ) : (
@@ -727,7 +685,7 @@ export default function App() {
                   <div className="text-left leading-tight min-w-0">
                     <strong className="block font-bold truncate">Modo Sin Conexión Activo</strong>
                     <span className="text-[11px] text-amber-800 dark:text-amber-300 block truncate">
-                      {cacheStatus.routesCount} rutas y horarios protegidos en la memoria local.
+                      {cacheStatus.routesCount} rutas protegidas en la memoria local.
                     </span>
                   </div>
                 </div>
@@ -1076,9 +1034,7 @@ export default function App() {
           setIsSubscribed(true);
           try {
             localStorage.setItem('atiempo_pro_subscription_v1', 'true');
-          } catch {
-            // ignore
-          }
+          } catch {}
         }}
         isSubscribed={isSubscribed}
       />
