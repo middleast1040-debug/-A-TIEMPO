@@ -15,47 +15,30 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
   return (
     <div className="inline-flex items-center gap-2.5 select-none">
       <div
-        className={`${dimensions} relative rounded-xl bg-gradient-to-tr from-[#0055FF] via-[#0088FF] to-[#00D4AA] p-[1.5px] shadow-lg shadow-blue-500/20`}
+        className={`${dimensions} relative rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 p-[1.5px] shadow-lg shadow-blue-500/20`}
       >
         <div className="w-full h-full rounded-[10.5px] bg-[#070D18] flex items-center justify-center relative overflow-hidden">
+          {/* Isotipo oficial: Letra A estilizada con flecha ascendente dinámica */}
           <svg
             viewBox="0 0 32 32"
             fill="none"
             className="w-5 h-5"
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* Anillo de precisión orbital */}
-            <circle
-              cx="16"
-              cy="16"
-              r="11.5"
-              stroke="url(#atiempo_grad)"
-              strokeWidth="2.5"
-              strokeDasharray="52 16"
-              strokeLinecap="round"
-            />
-            {/* Vector de ruta y aguja exacta */}
+            {/* Estructura geométrica de la A */}
             <path
-              d="M16 9V16L21 19.5"
-              stroke="#FFFFFF"
-              strokeWidth="2.6"
+              d="M16 5L6 25H11L16 14L21 25H26L16 5Z"
+              fill="#F8FAFC"
+              fillOpacity="0.95"
+            />
+            {/* Flecha curva ascendente corporativa */}
+            <path
+              d="M7 19C11 15 19 15 25 10M25 10V16M25 10H19"
+              stroke="#0070F3"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="16" cy="16" r="2" fill="#00E5A8" />
-            <defs>
-              <linearGradient
-                id="atiempo_grad"
-                x1="4"
-                y1="4"
-                x2="28"
-                y2="28"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#38BDF8" />
-                <stop offset="1" stopColor="#00E5A8" />
-              </linearGradient>
-            </defs>
           </svg>
         </div>
       </div>
