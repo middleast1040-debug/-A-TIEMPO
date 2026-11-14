@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import BogotaApp from './components/BogotaApp';
 import {
   Route,
   FavoriteDestination,
@@ -32,7 +31,6 @@ import {
   getStoredCards,
   saveStoredCards,
   getStoredTransactions,
-  saveStoredTransactions,
 } from './utils/tullaveStorage';
 import { TuLlaveQuickWidget } from './components/TuLlaveQuickWidget';
 import { TuLlaveManagerModal, TuLlaveTab } from './components/TuLlaveManagerModal';
@@ -45,6 +43,7 @@ import { AccessibilitySupportModal, AccessibilitySettings } from './components/A
 import { AppTutorialModal } from './components/AppTutorialModal';
 import { AppSettingsModal } from './components/AppSettingsModal';
 import { InteractiveTransitMapModal } from './components/InteractiveTransitMapModal';
+import { RadarTacticoModal } from './components/RadarTacticoModal';
 import { WeeklyRouteSchedule } from './components/WeeklyRouteSchedule';
 import { BusLocatorSection } from './components/BusLocatorSection';
 import { SocialShareFooter } from './components/SocialShareFooter';
@@ -60,6 +59,18 @@ import {
   getOfflineCacheStatus,
   syncOfflineTransitCache,
 } from './utils/offlineTransitCache';
+import {
+  Radar,
+  Sparkles,
+  Play,
+  CheckCircle2,
+  WifiOff,
+  Compass,
+  ArrowRightLeft,
+  MapPin,
+  Clock,
+  ShieldCheck,
+} from 'lucide-react';
 
 const STORAGE_KEYS = {
   CITY: 'ontime_colombia_selected_city_v1',
@@ -91,6 +102,7 @@ export default function App() {
   }, [selectedCityId]);
 
   const [activeTab, setActiveTab] = useState<AppTab>('planear');
+  const [isRadarOpen, setIsRadarOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,9 +179,10 @@ export default function App() {
   const handleAddIntermediateStop = () => {
     if (intermediateStops.length >= 4) return;
     const allStops = currentCitySystem.stations || [];
-    const candidate = allStops.find(
-      (st) => st !== originStop && st !== destinationStop && !intermediateStops.includes(st)
-    ) || 'Calle 72';
+    const candidate =
+      allStops.find(
+        (st) => st !== originStop && st !== destinationStop && !intermediateStops.includes(st)
+      ) || 'Calle 72';
     const next = [...intermediateStops, candidate];
     setIntermediateStops(next);
     try {
@@ -214,7 +227,10 @@ export default function App() {
   };
 
   const [favorites, setFavorites] = useState<FavoriteDestination[]>(() => {
-    return encryptedLocalStorageGet<FavoriteDestination[]>(STORAGE_KEYS.FAVORITES, INITIAL_FAVORITES);
+    return encryptedLocalStorageGet<FavoriteDestination[]>(
+      STORAGE_KEYS.FAVORITES,
+      INITIAL_FAVORITES
+    );
   });
 
   const [checklist, setChecklist] = useState<ExitChecklistItem[]>(() => {
@@ -241,7 +257,9 @@ export default function App() {
   const [isConsulting, setIsConsulting] = useState(false);
 
   const [tullaveCards, setTullaveCards] = useState<TuLlaveCard[]>(() => getStoredCards());
-  const [tullaveTransactions, setTullaveTransactions] = useState<TuLlaveTransaction[]>(() => getStoredTransactions());
+  const [tullaveTransactions, setTullaveTransactions] = useState<TuLlaveTransaction[]>(() =>
+    getStoredTransactions()
+  );
   const [isTuLlaveModalOpen, setIsTuLlaveModalOpen] = useState(false);
   const [tuLlaveInitialTab, setTuLlaveInitialTab] = useState<TuLlaveTab | 'totems'>('saldo');
   const [isQuickRefreshingTuLlave, setIsQuickRefreshingTuLlave] = useState(false);
@@ -627,10 +645,10 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-between selection:bg-[#0070F3] selection:text-white font-['Plus_Jakarta_Sans',sans-serif] transition-colors ${
+      className={`min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 font-['Plus_Jakarta_Sans',sans-serif] transition-colors ${
         themeMode === 'light'
-          ? 'bg-[#F4F6F9] text-slate-900'
-          : 'bg-[#070D18] text-slate-100'
+          ? 'bg-gradient-to-br from-[#F0F4F9] via-[#E8EEF6] to-[#F8FAFC] text-slate-900'
+          : 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0F1C34] via-[#070D19] to-[#04070E] text-slate-100'
       } ${accessibilitySettings.largeText ? 'text-base sm:text-lg' : ''}`}
     >
       <Header
@@ -641,91 +659,84 @@ export default function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
-      <main className="max-w-4xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-8 box-border overflow-x-clip">
-        
-        {/* CONDICIONAL: SI ES BOGOTÁ, CARGA EL CENTRO TÁCTICO BOGOTAAPP. SINO, EL SISTEMA MULTICIUDAD */}
-        {selectedCityId === 'bogota' ? (
-          <BogotaApp />
-        ) : (
-          <>
-            <section className="text-center max-w-xl mx-auto pt-2 pb-1 space-y-1.5 px-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight break-words">
-                Sal a la hora exacta
+      <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-8 box-border overflow-x-clip">
+        {/* HERO NEO-GLASS COMMAND CENTER */}
+        <section className="relative overflow-hidden rounded-[2rem] bg-white/80 dark:bg-[#0D172A]/80 backdrop-blur-xl border border-slate-200/80 dark:border-cyan-500/20 p-5 sm:p-7 shadow-xl shadow-blue-950/5 dark:shadow-cyan-950/20">
+          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-gradient-to-br from-cyan-500/15 to-blue-600/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/15 border border-blue-500/20 dark:border-cyan-400/30 text-[11px] font-bold text-blue-700 dark:text-cyan-300">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+                <span>SISTEMA PREDICTIVO • {currentCitySystem.name.toUpperCase()}</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                Sal en el{' '}
+                <span className="bg-gradient-to-r from-[#0070F3] via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+                  minuto exacto
+                </span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 break-words">
-                Calculamos el minuto para salir de tu puerta y subirte al bus sin esperar en el andén.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Sincronizamos tu caminata al paradero con la llegada real del bus. Sin filas, sin esperas bajo la lluvia y con transbordo a{' '}
+                <strong className="text-emerald-600 dark:text-emerald-400">$0 COP</strong>.
               </p>
 
-              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                <span className="font-bold text-slate-800 dark:text-slate-200">{currentCitySystem.name}</span>
-                <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-                <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')}</span>
-                <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-                <span className="text-[#0060EA] dark:text-[#38BDF8] font-semibold">Transbordo gratis</span>
-                {isOffline && (
-                  <>
-                    <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-                    <span className="text-amber-500 font-medium">Modo sin internet</span>
-                  </>
-                )}
-              </div>
-            </section>
-
-            {cacheSyncToast && (
-              <div className="p-3 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 rounded-2xl text-xs text-[#0060EA] dark:text-[#38BDF8] flex items-center justify-center gap-2 max-w-md mx-auto shadow-xs animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 text-[#0070F3] dark:text-[#38BDF8] shrink-0" />
-                <span className="font-bold">{cacheSyncToast}</span>
-              </div>
-            )}
-
-            {isOffline && (
-              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-500/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 max-w-lg mx-auto shadow-sm">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-amber-600 dark:text-amber-400 shrink-0">⚠️</span>
-                  <div className="text-left leading-tight min-w-0">
-                    <strong className="block font-bold truncate">Modo Sin Conexión Activo</strong>
-                    <span className="text-[11px] text-amber-800 dark:text-amber-300 block truncate">
-                      {cacheStatus.routesCount} rutas protegidas en la memoria local.
-                    </span>
-                  </div>
-                </div>
+              {/* Quick Telemetry Pills */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={handleSyncCache}
-                  className="px-2.5 py-1 text-[11px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-100 hover:bg-amber-300 dark:hover:bg-amber-800 rounded-lg transition shrink-0 cursor-pointer"
+                  onClick={() => setActiveTab('ciudades')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 hover:bg-blue-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/70 text-xs font-bold text-slate-800 dark:text-cyan-200 transition cursor-pointer"
                 >
-                  Verificar
+                  <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                  <span>{currentCitySystem.name}</span>
+                </button>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('transbordo')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <span>Ventana Transbordo</span>
                 </button>
               </div>
-            )}
+            </div>
 
-            <div className="pt-0.5 flex items-center justify-center w-full px-2">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#0E1726] border border-slate-200 dark:border-[#1C2A3E] text-xs shadow-xs max-w-full min-w-0">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${travelState === 'monitoring' ? 'bg-[#0070F3] dark:bg-[#38BDF8] animate-pulse' : 'bg-slate-400'}`} />
-                <span className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[180px] sm:max-w-xs">
-                  {travelState === 'monitoring'
-                    ? `Monitoreando salida hacia ${destinationStop}`
-                    : travelState === 'arrived'
-                    ? 'Viaje completado'
-                    : 'Modo Reposo (Alarmas en silencio)'}
-                </span>
+            {/* Action Cluster: Radar Waze + Live Monitor */}
+            <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsRadarOpen(true)}
+                className="group relative overflow-hidden inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-[#0060EA] via-[#0080FF] to-cyan-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/25 hover:shadow-cyan-500/40 transition-all cursor-pointer"
+              >
+                <Radar className="w-4 h-4 animate-spin" style={{ animationDuration: '6s' }} />
+                <span>Radar Vial Waze en Vivo</span>
+              </button>
+
+              <div className="inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-[#08101E] border border-slate-200 dark:border-slate-800 text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      travelState === 'monitoring'
+                        ? 'bg-emerald-400 animate-ping'
+                        : 'bg-slate-400'
+                    }`}
+                  />
+                  <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                    {travelState === 'monitoring' ? 'Alarma Activa' : 'Radar en Espera'}
+                  </span>
+                </div>
                 {travelState === 'monitoring' ? (
-                  <div className="flex items-center gap-1.5 ml-1">
-                    <button
-                      type="button"
-                      onClick={() => setTravelState('arrived')}
-                      className="px-2.5 py-0.5 bg-gradient-to-r from-[#0080FF] to-[#0060EA] text-white font-bold rounded-lg text-[10px] cursor-pointer"
-                    >
-                      ¡Ya llegué!
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTravelState('inactive')}
-                      className="px-2 py-0.5 bg-slate-100 dark:bg-[#070D18] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg text-[10px] cursor-pointer"
-                    >
-                      Pausar
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTravelState('inactive')}
+                    className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
+                  >
+                    Pausar
+                  </button>
                 ) : (
                   <button
                     type="button"
@@ -733,207 +744,259 @@ export default function App() {
                       setTravelState('monitoring');
                       setIsAlarmActive(true);
                     }}
-                    className="px-2.5 py-0.5 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 text-[#0060EA] dark:text-[#38BDF8] font-bold rounded-lg text-[10px] cursor-pointer ml-1 inline-flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-lg bg-blue-600/15 text-blue-600 dark:text-cyan-300 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                   >
-                    <span>▶️</span>
-                    <span>Activar Salida</span>
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Activar</span>
                   </button>
                 )}
               </div>
             </div>
+          </div>
+        </section>
 
-            {activeTab === 'planear' && (
-              <div className="space-y-5">
-                <QuickDestinationHub
-                  citySystem={currentCitySystem}
-                  currentDestination={destinationStop}
-                  onSelectDestination={(dest, orig) => {
+        {/* Sub-navigation Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {[
+            { id: 'planear', label: 'Calculador Exacto' },
+            { id: 'sugerida', label: 'Línea de Tiempo' },
+            { id: 'transbordo', label: 'Transbordo $0' },
+            { id: 'ciudades', label: 'Ciudades Colombia' },
+            { id: 'noticias', label: 'Alertas Viales' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as AppTab)}
+              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer border ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-[#0070F3] to-cyan-500 text-white border-transparent shadow-md shadow-blue-500/20'
+                  : 'bg-white/70 dark:bg-[#0E1726]/80 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {cacheSyncToast && (
+          <div className="p-3 bg-[#EFF6FF] dark:bg-[#0E1B2E] border border-[#BFDBFE] dark:border-[#0080FF]/40 rounded-2xl text-xs text-[#0060EA] dark:text-[#38BDF8] flex items-center justify-center gap-2 max-w-md mx-auto shadow-xs">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span className="font-bold">{cacheSyncToast}</span>
+          </div>
+        )}
+
+        {isOffline && (
+          <div className="p-3.5 bg-amber-50 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-500/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 max-w-lg mx-auto shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div className="text-left leading-tight min-w-0">
+                <strong className="block font-bold truncate">Modo Sin Conexión Activo</strong>
+                <span className="text-[11px] block truncate">
+                  {cacheStatus.routesCount} rutas protegidas en memoria local.
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSyncCache}
+              className="px-2.5 py-1 text-[11px] font-bold bg-amber-200 dark:bg-amber-900/60 rounded-lg shrink-0 cursor-pointer"
+            >
+              Verificar
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'planear' && (
+          <div className="space-y-6">
+            <QuickDestinationHub
+              citySystem={currentCitySystem}
+              currentDestination={destinationStop}
+              onSelectDestination={(dest, orig) => {
+                setDestinationStop(dest);
+                if (orig) setOriginStop(orig);
+                handleCalculate();
+              }}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <section className="lg:col-span-6 space-y-5">
+                <RouteSelector
+                  routes={routes}
+                  selectedRouteId={selectedRouteId}
+                  onSelectRouteId={setSelectedRouteId}
+                  originStop={originStop}
+                  onChangeOriginStop={setOriginStop}
+                  destinationStop={destinationStop}
+                  onChangeDestinationStop={setDestinationStop}
+                  intermediateStops={intermediateStops}
+                  onAddIntermediateStop={handleAddIntermediateStop}
+                  onRemoveIntermediateStop={handleRemoveIntermediateStop}
+                  onChangeIntermediateStop={handleChangeIntermediateStop}
+                  onOpenMap={() => setIsInteractiveMapOpen(true)}
+                  availableStations={currentCitySystem.stations}
+                  walkingMinutes={walkingMinutes}
+                  onChangeWalkingMinutes={setWalkingMinutes}
+                  bufferMinutes={bufferMinutes}
+                  onChangeBufferMinutes={setBufferMinutes}
+                  onCalculate={handleCalculate}
+                  isConsulting={isConsulting}
+                  currentTimeMs={currentTimeMs}
+                  cityId={currentCitySystem.id}
+                />
+
+                {currentRoute && (
+                  <SchematicTransitStrip
+                    route={currentRoute}
+                    originStop={originStop}
+                    destinationStop={destinationStop}
+                    intermediateStops={intermediateStops}
+                    onSelectStation={(st) => {
+                      setDestinationStop(st);
+                      handleCalculate();
+                    }}
+                  />
+                )}
+
+                {activeTuLlaveCard && (
+                  <TuLlaveQuickWidget
+                    card={activeTuLlaveCard}
+                    fare={currentCitySystem.fare}
+                    citySystemName={currentCitySystem.name}
+                    onOpenModal={handleOpenTuLlave}
+                    onQuickRefresh={handleQuickRefreshTuLlave}
+                    isRefreshing={isQuickRefreshingTuLlave}
+                  />
+                )}
+              </section>
+
+              <section className="lg:col-span-6 space-y-5">
+                {hasCalculated && departureCalculation && (
+                  <div id="resultadoCard">
+                    <DepartureResultCard
+                      calculation={departureCalculation}
+                      isAlarmActive={isAlarmActive && travelState === 'monitoring'}
+                      onToggleAlarm={() => {
+                        if (travelState !== 'monitoring') {
+                          setTravelState('monitoring');
+                          setIsAlarmActive(true);
+                        } else {
+                          setIsAlarmActive(!isAlarmActive);
+                        }
+                      }}
+                      onTestChime={() => playDepartureChime('gentle')}
+                      onOpenFocusMode={() => setIsFocusModeOpen(true)}
+                      isFavorite={isCurrentFavorite}
+                      onToggleFavorite={handleToggleFavorite}
+                      isConsulting={isConsulting}
+                      currentTimeMs={currentTimeMs}
+                      destinationStop={destinationStop}
+                      cityName={currentCitySystem.name}
+                      isWakeUpAlarmActive={isWakeUpAlarmActive}
+                      onToggleWakeUpAlarm={handleToggleWakeUpAlarm}
+                    />
+                  </div>
+                )}
+
+                <BusLocatorSection
+                  routes={routes}
+                  cityName={currentCitySystem.name}
+                  onSelectBusRoute={(rId, orig, dest) => {
+                    setSelectedRouteId(rId);
+                    setOriginStop(orig);
                     setDestinationStop(dest);
-                    if (orig) setOriginStop(orig);
                     handleCalculate();
+                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                  }}
+                  onOpenMapForRoute={(r) => {
+                    setSelectedRouteId(r.id);
+                    setIsInteractiveMapOpen(true);
                   }}
                 />
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  <section className="lg:col-span-6 space-y-5">
-                    <RouteSelector
-                      routes={routes}
-                      selectedRouteId={selectedRouteId}
-                      onSelectRouteId={setSelectedRouteId}
-                      originStop={originStop}
-                      onChangeOriginStop={setOriginStop}
-                      destinationStop={destinationStop}
-                      onChangeDestinationStop={setDestinationStop}
-                      intermediateStops={intermediateStops}
-                      onAddIntermediateStop={handleAddIntermediateStop}
-                      onRemoveIntermediateStop={handleRemoveIntermediateStop}
-                      onChangeIntermediateStop={handleChangeIntermediateStop}
-                      onOpenMap={() => setIsInteractiveMapOpen(true)}
-                      availableStations={currentCitySystem.stations}
-                      walkingMinutes={walkingMinutes}
-                      onChangeWalkingMinutes={setWalkingMinutes}
-                      bufferMinutes={bufferMinutes}
-                      onChangeBufferMinutes={setBufferMinutes}
-                      onCalculate={handleCalculate}
-                      isConsulting={isConsulting}
-                      currentTimeMs={currentTimeMs}
-                      cityId={currentCitySystem.id}
-                    />
-
-                    {currentRoute && (
-                      <SchematicTransitStrip
-                        route={currentRoute}
-                        originStop={originStop}
-                        destinationStop={destinationStop}
-                        intermediateStops={intermediateStops}
-                        onSelectStation={(st) => {
-                          setDestinationStop(st);
-                          handleCalculate();
-                        }}
-                      />
-                    )}
-
-                    {activeTuLlaveCard && (
-                      <TuLlaveQuickWidget
-                        card={activeTuLlaveCard}
-                        fare={currentCitySystem.fare}
-                        citySystemName={currentCitySystem.name}
-                        onOpenModal={handleOpenTuLlave}
-                        onQuickRefresh={handleQuickRefreshTuLlave}
-                        isRefreshing={isQuickRefreshingTuLlave}
-                      />
-                    )}
-                  </section>
-
-                  <section className="lg:col-span-6 space-y-5">
-                    {hasCalculated && departureCalculation && (
-                      <div id="resultadoCard">
-                        <DepartureResultCard
-                          calculation={departureCalculation}
-                          isAlarmActive={isAlarmActive && travelState === 'monitoring'}
-                          onToggleAlarm={() => {
-                            if (travelState !== 'monitoring') {
-                              setTravelState('monitoring');
-                              setIsAlarmActive(true);
-                            } else {
-                              setIsAlarmActive(!isAlarmActive);
-                            }
-                          }}
-                          onTestChime={() => playDepartureChime('gentle')}
-                          onOpenFocusMode={() => setIsFocusModeOpen(true)}
-                          isFavorite={isCurrentFavorite}
-                          onToggleFavorite={handleToggleFavorite}
-                          isConsulting={isConsulting}
-                          currentTimeMs={currentTimeMs}
-                          destinationStop={destinationStop}
-                          cityName={currentCitySystem.name}
-                          isWakeUpAlarmActive={isWakeUpAlarmActive}
-                          onToggleWakeUpAlarm={handleToggleWakeUpAlarm}
-                        />
-                      </div>
-                    )}
-
-                    <BusLocatorSection
-                      routes={routes}
-                      cityName={currentCitySystem.name}
-                      onSelectBusRoute={(rId, orig, dest) => {
-                        setSelectedRouteId(rId);
-                        setOriginStop(orig);
-                        setDestinationStop(dest);
-                        handleCalculate();
-                        window.scrollTo({ top: 120, behavior: 'smooth' });
-                      }}
-                      onOpenMapForRoute={(r) => {
-                        setSelectedRouteId(r.id);
-                        setIsInteractiveMapOpen(true);
-                      }}
-                    />
-
-                    <FavoritesList
-                      favorites={favorites}
-                      routes={routes}
-                      currentTimeMs={currentTimeMs}
-                      onSelectFavorite={handleSelectFavorite}
-                      onRemoveFavorite={handleRemoveFavorite}
-                      onAddCurrentAsFavorite={handleToggleFavorite}
-                    />
-
-                    <WeeklyRouteSchedule
-                      routes={routes}
-                      currentRouteId={selectedRouteId}
-                      originStop={originStop}
-                      destinationStop={destinationStop}
-                      onSelectRoute={(rId, orig, dest) => {
-                        setSelectedRouteId(rId);
-                        setOriginStop(orig);
-                        setDestinationStop(dest);
-                        handleCalculate();
-                      }}
-                    />
-                  </section>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'transbordo' && (
-              <div className="space-y-6">
-                <TransferWindowWidget
-                  citySystem={currentCitySystem}
-                  onOpenCardManager={() => handleOpenTuLlave('saldo')}
+                <FavoritesList
+                  favorites={favorites}
+                  routes={routes}
+                  currentTimeMs={currentTimeMs}
+                  onSelectFavorite={handleSelectFavorite}
+                  onRemoveFavorite={handleRemoveFavorite}
+                  onAddCurrentAsFavorite={handleToggleFavorite}
                 />
-              </div>
-            )}
 
-            {activeTab === 'sugerida' && currentRoute && (
-              <div className="space-y-6">
-                <SuggestedRouteTimeline
-                  route={currentRoute}
+                <WeeklyRouteSchedule
+                  routes={routes}
+                  currentRouteId={selectedRouteId}
                   originStop={originStop}
                   destinationStop={destinationStop}
-                  walkingMinutes={walkingMinutes}
-                  bufferMinutes={bufferMinutes}
-                  targetBusArrivalMs={departureCalculation?.targetBusArrivalMs || currentTimeMs + 10 * 60 * 1000}
-                  currentTimeMs={currentTimeMs}
-                  weather={currentCitySystem.weather}
-                  fare={currentCitySystem.fare}
-                  cityName={currentCitySystem.name}
-                  cardBrand={currentCitySystem.cardBrand}
-                  activeAlerts={currentCitySystem.news}
-                  travelState={travelState}
-                  onStartTrip={() => setTravelState('monitoring')}
-                  onPauseTrip={() => setTravelState('inactive')}
-                  onArrivedDestination={() => setTravelState('arrived')}
-                  isWakeUpAlarmActive={isWakeUpAlarmActive}
-                  onToggleWakeUpAlarm={handleToggleWakeUpAlarm}
+                  onSelectRoute={(rId, orig, dest) => {
+                    setSelectedRouteId(rId);
+                    setOriginStop(orig);
+                    setDestinationStop(dest);
+                    handleCalculate();
+                  }}
                 />
-              </div>
-            )}
-
-            {activeTab === 'ciudades' && (
-              <CitiesExplorerTab
-                selectedCityId={selectedCityId}
-                onSelectCity={(cityId) => {
-                  handleSelectCity(cityId);
-                  setActiveTab('planear');
-                }}
-                onOpenCardManager={() => handleOpenTuLlave('saldo')}
-                onOpenFullScreenMap={() => setIsInteractiveMapOpen(true)}
-              />
-            )}
-
-            {activeTab === 'noticias' && (
-              <BogotaNewsSection citySystem={currentCitySystem} />
-            )}
-
-            <SubscriptionFooterSection
-              isSubscribed={isSubscribed}
-              onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
-              cityName={currentCitySystem.name}
-              activeCard={activeTuLlaveCard}
-              onOpenTutorial={() => setIsTutorialModalOpen(true)}
-            />
-          </>
+              </section>
+            </div>
+          </div>
         )}
+
+        {activeTab === 'transbordo' && (
+          <div className="space-y-6">
+            <TransferWindowWidget
+              citySystem={currentCitySystem}
+              onOpenCardManager={() => handleOpenTuLlave('saldo')}
+            />
+          </div>
+        )}
+
+        {activeTab === 'sugerida' && currentRoute && (
+          <div className="space-y-6">
+            <SuggestedRouteTimeline
+              route={currentRoute}
+              originStop={originStop}
+              destinationStop={destinationStop}
+              walkingMinutes={walkingMinutes}
+              bufferMinutes={bufferMinutes}
+              targetBusArrivalMs={
+                departureCalculation?.targetBusArrivalMs || currentTimeMs + 10 * 60 * 1000
+              }
+              currentTimeMs={currentTimeMs}
+              weather={currentCitySystem.weather}
+              fare={currentCitySystem.fare}
+              cityName={currentCitySystem.name}
+              cardBrand={currentCitySystem.cardBrand}
+              activeAlerts={currentCitySystem.news}
+              travelState={travelState}
+              onStartTrip={() => setTravelState('monitoring')}
+              onPauseTrip={() => setTravelState('inactive')}
+              onArrivedDestination={() => setTravelState('arrived')}
+              isWakeUpAlarmActive={isWakeUpAlarmActive}
+              onToggleWakeUpAlarm={handleToggleWakeUpAlarm}
+            />
+          </div>
+        )}
+
+        {activeTab === 'ciudades' && (
+          <CitiesExplorerTab
+            selectedCityId={selectedCityId}
+            onSelectCity={(cityId) => {
+              handleSelectCity(cityId);
+              setActiveTab('planear');
+            }}
+            onOpenCardManager={() => handleOpenTuLlave('saldo')}
+            onOpenFullScreenMap={() => setIsInteractiveMapOpen(true)}
+          />
+        )}
+
+        {activeTab === 'noticias' && <BogotaNewsSection citySystem={currentCitySystem} />}
+
+        <SubscriptionFooterSection
+          isSubscribed={isSubscribed}
+          onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+          cityName={currentCitySystem.name}
+          activeCard={activeTuLlaveCard}
+          onOpenTutorial={() => setIsTutorialModalOpen(true)}
+        />
       </main>
 
       <BottomNavDock
@@ -949,8 +1012,11 @@ export default function App() {
       />
 
       <footer className="w-full border-t border-slate-200 dark:border-[#1C2A3E] bg-white/95 dark:bg-[#070D18]/95 pt-5 pb-24 md:pb-8 text-xs text-slate-500 dark:text-slate-400 mt-auto transition-colors">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col gap-3.5">
-          <SocialShareFooter cityName={currentCitySystem.name} currentRouteCode={currentRoute?.code} />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col gap-3.5">
+          <SocialShareFooter
+            cityName={currentCitySystem.name}
+            currentRouteCode={currentRoute?.code}
+          />
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left pt-2 border-t border-slate-100 dark:border-[#1C2A3E]">
             <div className="flex items-center gap-2.5">
               <Logo size="sm" showText={false} />
@@ -964,6 +1030,13 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <RadarTacticoModal
+        isOpen={isRadarOpen}
+        onClose={() => setIsRadarOpen(false)}
+        cityName={currentCitySystem.name}
+        cityId={currentCitySystem.id}
+      />
 
       <ChecklistDrawer
         isOpen={isChecklistOpen}
