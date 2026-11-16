@@ -32,12 +32,15 @@ export default function App() {
     return saved === 'light' ? 'light' : 'dark';
   });
 
+  // Sincronización robusta con la etiqueta html y el DOM global
   useEffect(() => {
     const root = document.documentElement;
     if (themeMode === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
     } else {
       root.classList.remove('dark');
+      root.classList.add('light');
     }
     localStorage.setItem('atiempo_theme', themeMode);
   }, [themeMode]);
@@ -130,7 +133,7 @@ export default function App() {
   const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#F4F6F9] dark:bg-[#070D18] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] transition-colors">
+    <div className="min-h-screen flex flex-col justify-between bg-[var(--canvas-bg)] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={{ checked: checkedCount, total: checklist.length }}
@@ -141,7 +144,7 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
         {/* Hero Banner */}
-        <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#0C1424] border border-slate-200 dark:border-slate-800 p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
+        <section className="relative overflow-hidden rounded-3xl bg-[var(--surface-bg)] border border-[var(--border-color)] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-2.5 max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
