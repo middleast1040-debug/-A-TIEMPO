@@ -18,8 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="w-full border-b border-slate-200 dark:border-[#1C2A3E] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 w-full">
-        {/* Left: Professional 3D Custom Logo */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 w-full">
+        {/* Logo 3D Profesional */}
         <div className="flex items-center gap-2.5 shrink-0 select-none">
           <img 
             src="/logo-atiempo.png" 
@@ -30,32 +30,30 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
               A Tiempo
             </span>
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#0070F3] dark:text-cyan-400 mt-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#0060EA] dark:text-cyan-400 mt-1">
               Colombia
             </span>
           </div>
         </div>
 
-        {/* Right: Essential Action Controls (Day/Night, Checklist, Settings) */}
+        {/* Controles de Acción (Sol/Luna, Checklist, Ajustes) */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* 1. Icono Diurno - Nocturno (Day / Night Toggle) */}
-          {onToggleTheme && (
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#0E1726] dark:hover:bg-[#15233A] border border-slate-200 dark:border-[#1C2A3E] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
-              title={themeMode === 'dark' ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
-              aria-label={themeMode === 'dark' ? 'Activar modo día' : 'Activar modo noche'}
-            >
-              {themeMode === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400 transition-transform group-hover:rotate-45" strokeWidth={2} />
-              ) : (
-                <Moon className="w-4 h-4 text-[#0060EA] transition-transform group-hover:-rotate-12" strokeWidth={2} />
-              )}
-            </button>
-          )}
+          {/* Botón Diurno / Nocturno */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#0E1726] dark:hover:bg-[#15233A] border border-slate-200 dark:border-[#1C2A3E] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
+            title={themeMode === 'dark' ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
+            aria-label={themeMode === 'dark' ? 'Activar modo día' : 'Activar modo noche'}
+          >
+            {themeMode === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400 transition-transform group-hover:rotate-45" strokeWidth={2} />
+            ) : (
+              <Moon className="w-4 h-4 text-[#0060EA] transition-transform group-hover:-rotate-12" strokeWidth={2} />
+            )}
+          </button>
 
-          {/* 2. Icono de lista antes de salir de casa */}
+          {/* Botón de Checklist */}
           {onOpenChecklist && (
             <button
               type="button"
@@ -76,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* 3. Icono de Configuración / Ajustes */}
+          {/* Botón de Ajustes */}
           <button
             type="button"
             onClick={onOpenSettings}
@@ -85,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
             aria-label="Abrir configuración y opciones"
           >
             <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-[#0060EA] dark:group-hover:text-[#38BDF8] transition-transform group-hover:rotate-45 duration-200" strokeWidth={2} />
-            <span className="text-xs font-bold">Ajustes</span>
+            <span className="text-xs font-bold hidden sm:inline">Ajustes</span>
           </button>
         </div>
       </div>
