@@ -395,7 +395,7 @@ export default function App() {
         onChangeBufferMinutes={setBufferMinutes}
       />
 
-      {departureCalculation && (
+      {departureCalculation && isFocusModeOpen && (
         <FocusDepartureMode
           isOpen={isFocusModeOpen}
           onClose={() => setIsFocusModeOpen(false)}
