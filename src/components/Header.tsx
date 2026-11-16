@@ -1,6 +1,5 @@
 import React from 'react';
 import { Settings, ListChecks, Sun, Moon } from 'lucide-react';
-import { Logo } from './Logo';
 
 interface HeaderProps {
   onOpenChecklist?: () => void;
@@ -20,9 +19,21 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full border-b border-slate-200 dark:border-[#1C2A3E] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 w-full">
-        {/* Left: Minimal Brand Logo - Zero Clutter */}
-        <div className="flex items-center shrink-0">
-          <Logo size="sm" layout="horizontal" />
+        {/* Left: Professional 3D Custom Logo */}
+        <div className="flex items-center gap-2.5 shrink-0 select-none">
+          <img 
+            src="/logo-atiempo.png" 
+            alt="A Tiempo Logo" 
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl shadow-md shadow-blue-500/20" 
+          />
+          <div className="flex flex-col leading-none">
+            <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
+              A Tiempo
+            </span>
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#0070F3] dark:text-cyan-400 mt-1">
+              Colombia
+            </span>
+          </div>
         </div>
 
         {/* Right: Essential Action Controls (Day/Night, Checklist, Settings) */}
