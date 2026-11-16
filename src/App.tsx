@@ -32,7 +32,6 @@ export default function App() {
     return saved === 'light' ? 'light' : 'dark';
   });
 
-  // Sincronización robusta con la etiqueta html y el DOM global
   useEffect(() => {
     const root = document.documentElement;
     if (themeMode === 'dark') {
@@ -133,7 +132,7 @@ export default function App() {
   const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[var(--canvas-bg)] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#070D18] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={{ checked: checkedCount, total: checklist.length }}
@@ -144,11 +143,11 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
         {/* Hero Banner */}
-        <section className="relative overflow-hidden rounded-3xl bg-[var(--surface-bg)] border border-[var(--border-color)] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
+        <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#0C1424] border border-slate-200 dark:border-slate-800 p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-2.5 max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#0060EA] dark:text-cyan-300">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-blue-600 dark:text-cyan-300">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{currentCitySystem.name}</span>
                 </span>
@@ -160,14 +159,14 @@ export default function App() {
 
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                 Movilidad inteligente{' '}
-                <span className="bg-gradient-to-r from-[#0060EA] to-emerald-500 dark:from-blue-400 dark:to-[#00E5A8] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-400 dark:to-[#00E5A8] bg-clip-text text-transparent">
                   puerta a andén
                 </span>
               </h1>
 
               <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-1.5">
-                  <Footprints className="w-4 h-4 text-[#0060EA] dark:text-cyan-400" />
+                  <Footprints className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
                   <span>Caminata: <strong>{walkingMinutes} min</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -181,7 +180,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsRadarOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#0080FF] to-[#0060EA] dark:from-blue-600 dark:to-cyan-500 hover:opacity-95 text-white dark:text-slate-950 font-bold text-xs sm:text-sm shadow-lg transition cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-xs sm:text-sm shadow-lg transition cursor-pointer hover:opacity-95"
               >
                 <Radar className="w-4 h-4" />
                 <span>Radar Vial en Vivo</span>
