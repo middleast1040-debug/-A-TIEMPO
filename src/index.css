@@ -13,23 +13,22 @@
 }
 
 /* ==========================================
-   FORZADO ABSOLUTO DE MODO OSCURO / DIURNO
+   FORZADO ABSOLUTO Y UNIVERSAL DE TEMA
    ========================================== */
 
-/* Cuando la app está en modo oscuro */
-.app-theme-dark, 
-.app-theme-dark body, 
-.app-theme-dark div, 
-.app-theme-dark section, 
-.app-theme-dark article, 
-.app-theme-dark header, 
-.app-theme-dark footer {
+/* Modo Oscuro (Aplica tanto si usa la clase .dark en html/body como .app-theme-dark) */
+html.dark, 
+body.dark, 
+.app-theme-dark {
   background-color: #070D18 !important;
   color: #FFFFFF !important;
-  border-color: #1E293B !important;
 }
 
-/* Forzar que cualquier contenedor con fondo blanco o claro pase al tono oscuro de NUZUN */
+/* Forzar que cualquier tarjeta o contenedor claro cambie al azul oscuro de NUZUN */
+html.dark .bg-white,
+html.dark [class*="bg-white"],
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
 .app-theme-dark .bg-white,
 .app-theme-dark [class*="bg-white"],
 .app-theme-dark .bg-slate-50,
@@ -39,22 +38,36 @@
   border-color: #1E293B !important;
 }
 
-/* Forzar colores de texto legibles en modo oscuro */
+/* Forzar legibilidad de textos en modo oscuro */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
 .app-theme-dark .text-slate-900,
 .app-theme-dark .text-slate-800,
 .app-theme-dark .text-slate-700 {
   color: #FFFFFF !important;
 }
 
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
 .app-theme-dark .text-slate-600,
 .app-theme-dark .text-slate-500,
 .app-theme-dark .text-slate-400 {
   color: #8A9BA8 !important;
 }
 
-/* Cuando la app está en modo diurno */
-.app-theme-light,
-.app-theme-light body {
+html.dark .border-slate-200,
+html.dark .border-slate-100,
+.app-theme-dark .border-slate-200,
+.app-theme-dark .border-slate-100 {
+  border-color: #1E293B !important;
+}
+
+/* Modo Diurno */
+html.light, 
+body.light, 
+.app-theme-light {
   background-color: #F4F6F9 !important;
   color: #0F172A !important;
 }
