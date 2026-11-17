@@ -132,7 +132,11 @@ export default function App() {
   const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#0B131E] text-slate-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
+    <div className={`min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300 ${
+      themeMode === 'dark' 
+        ? 'dark bg-[#0B131E] text-white' 
+        : 'light bg-[#F4F6F9] text-slate-900'
+    }`}>
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={{ checked: checkedCount, total: checklist.length }}
@@ -142,7 +146,7 @@ export default function App() {
       />
 
       <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
-        {/* Hero Banner NUZUN - Sobrio y Azul Eléctrico Sólido */}
+        {/* Hero Banner NUZUN */}
         <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-3 max-w-2xl">
