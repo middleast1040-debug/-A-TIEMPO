@@ -146,18 +146,20 @@ export default function App() {
         <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-3 max-w-2xl">
-              {/* Identificador de Marca NUZUN (Logotipo PNG) */}
-              <div className="flex items-center gap-3 pb-1">
-                <img
-                  src="/nuzun-logo.png"
-                  alt="NUZUN Logo"
-                  className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl shadow-md shadow-[#1A73E8]/20 shrink-0"
-                />
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-extrabold tracking-widest text-slate-900 dark:text-white">
+              {/* Identificador de Marca NUZUN (Logotipo Grande y Simétrico) */}
+              <div className="flex items-center gap-3.5 pb-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-[#0B131E] border border-[#1E293B] shadow-md shadow-[#1A73E8]/15 overflow-hidden shrink-0">
+                  <img
+                    src="/nuzun-logo.png"
+                    alt="NUZUN Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl sm:text-2xl font-black tracking-widest text-slate-900 dark:text-white leading-none">
                     NUZUN
                   </span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#1A73E8]/15 text-[#1A73E8]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#1A73E8]/15 text-[#1A73E8] mt-1.5 w-max">
                     Sistema Activo
                   </span>
                 </div>
