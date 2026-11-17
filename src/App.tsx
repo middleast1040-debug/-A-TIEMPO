@@ -146,15 +146,13 @@ export default function App() {
         <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-3 max-w-2xl">
-              {/* Identificador de Marca NUZUN (Logotipo Ampliado y Simétrico) */}
+              {/* Identificador de Marca NUZUN (Logotipo Limpio y Simétrico) */}
               <div className="flex items-center gap-4 pb-1">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-[#0B131E] border border-[#1E293B] shadow-lg shadow-[#1A73E8]/20 overflow-hidden shrink-0">
-                  <img
-                    src="/nuzun-logo.png"
-                    alt="NUZUN Logo"
-                    className="w-full h-full object-contain scale-[1.8]"
-                  />
-                </div>
+                <img
+                  src="/nuzun-logo.png"
+                  alt="NUZUN Logo"
+                  className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0 drop-shadow-md"
+                />
                 <div className="flex flex-col">
                   <span className="text-2xl sm:text-3xl font-black tracking-widest text-slate-900 dark:text-white leading-none">
                     NUZUN
