@@ -37,9 +37,11 @@ export default function App() {
     if (themeMode === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      root.setAttribute('data-theme', 'dark');
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
     }
     localStorage.setItem('nuzun_theme', themeMode);
   }, [themeMode]);
@@ -134,7 +136,7 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300 ${
       themeMode === 'dark' 
-        ? 'dark bg-[#0B131E] text-white' 
+        ? 'dark bg-[#070D18] text-white' 
         : 'light bg-[#F4F6F9] text-slate-900'
     }`}>
       <Header
