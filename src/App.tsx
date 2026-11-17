@@ -136,8 +136,8 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300 ${
       themeMode === 'dark' 
-        ? 'dark bg-[#070D18] text-white' 
-        : 'light bg-[#F4F6F9] text-slate-900'
+        ? 'dark app-theme-dark bg-[#070D18] text-white' 
+        : 'light app-theme-light bg-[#F4F6F9] text-slate-900'
     }`}>
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
