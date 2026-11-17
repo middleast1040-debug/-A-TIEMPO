@@ -131,16 +131,8 @@ export default function App() {
 
   const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
-  // ESTILOS EN LÍNEA FORZADOS PARA EL CONTENEDOR PRINCIPAL
-  const themeStyles = themeMode === 'dark' 
-    ? { backgroundColor: '#070D18', color: '#FFFFFF' } 
-    : { backgroundColor: '#F4F6F9', color: '#0F172A' };
-
   return (
-    <div 
-      className="min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300"
-      style={themeStyles}
-    >
+    <div className="min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300 bg-[#F4F6F9] dark:bg-[#070D18] text-slate-900 dark:text-white">
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={{ checked: checkedCount, total: checklist.length }}
@@ -151,21 +143,12 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
         {/* Hero Banner NUZUN */}
-        <section 
-          className="relative overflow-hidden rounded-3xl border p-5 sm:p-7 shadow-sm transition-colors"
-          style={{
-            backgroundColor: themeMode === 'dark' ? '#111C2E' : '#FFFFFF',
-            borderColor: themeMode === 'dark' ? '#1E293B' : '#E2E8F0'
-          }}
-        >
+        <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-3 max-w-2xl">
               {/* Identificador de Marca NUZUN */}
               <div className="flex items-center gap-3.5 pb-1">
-                <div 
-                  className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl border shadow-md overflow-hidden shrink-0"
-                  style={{ backgroundColor: '#0B131E', borderColor: '#1E293B' }}
-                >
+                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-[#0B131E] border border-[#1E293B] shadow-md shadow-[#1A73E8]/15 overflow-hidden shrink-0">
                   <img
                     src="/nuzun-logo.png"
                     alt="NUZUN Logo"
@@ -173,7 +156,7 @@ export default function App() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl font-black tracking-widest leading-none">
+                  <span className="text-xl sm:text-2xl font-black tracking-widest text-slate-900 dark:text-white leading-none">
                     NUZUN
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#1A73E8]/15 text-[#1A73E8] mt-1.5 w-max">
@@ -184,21 +167,11 @@ export default function App() {
 
               {/* Badges de Sistema y Tarifa */}
               <div className="flex flex-wrap items-center gap-2">
-                <span 
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold text-[#1A73E8]"
-                  style={{ backgroundColor: themeMode === 'dark' ? '#0B131E' : '#F1F5F9', borderColor: themeMode === 'dark' ? '#1E293B' : '#E2E8F0' }}
-                >
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-bold text-[#1A73E8]">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{currentCitySystem.name}</span>
                 </span>
-                <span 
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold"
-                  style={{ 
-                    backgroundColor: themeMode === 'dark' ? '#0B131E' : '#F1F5F9', 
-                    borderColor: themeMode === 'dark' ? '#1E293B' : '#E2E8F0',
-                    color: themeMode === 'dark' ? '#8A9BA8' : '#334155'
-                  }}
-                >
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-semibold text-slate-700 dark:text-[#8A9BA8]">
                   <ArrowRightLeft className="w-3.5 h-3.5 text-[#1A73E8]" />
                   <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')} · Transbordo $0</span>
                 </span>
@@ -206,28 +179,22 @@ export default function App() {
 
               {/* Título Principal y Eslogan */}
               <div className="space-y-1">
-                <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                   Movilidad exacta,{' '}
                   <span className="text-[#1A73E8]">
                     sin complicaciones.
                   </span>
                 </h1>
-                <p 
-                  className="text-xs sm:text-sm"
-                  style={{ color: themeMode === 'dark' ? '#8A9BA8' : '#475569' }}
-                >
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-[#8A9BA8]">
                   Control de arribo y salida puerta a andén en tiempo real.
                 </p>
               </div>
 
               {/* Métricas Rápidas */}
-              <div 
-                className="flex flex-wrap items-center gap-4 pt-1 text-xs"
-                style={{ color: themeMode === 'dark' ? '#8A9BA8' : '#475569' }}
-              >
+              <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 dark:text-[#8A9BA8]">
                 <div className="flex items-center gap-1.5">
                   <Footprints className="w-4 h-4 text-[#1A73E8]" />
-                  <span>Caminata: <strong style={{ color: themeMode === 'dark' ? '#FFFFFF' : '#0F172A' }}>{walkingMinutes} min</strong></span>
+                  <span>Caminata: <strong className="text-slate-900 dark:text-white">{walkingMinutes} min</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Gauge className="w-4 h-4 text-[#1A73E8]" />
