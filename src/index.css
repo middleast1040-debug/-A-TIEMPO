@@ -7,6 +7,7 @@
   :root, html.light {
     --canvas-bg: #f4f6f9;
     --surface-bg: #ffffff;
+    --text-main: #0f172a;
     --border-color: #e2e8f0;
     --btn-secondary-bg: #eff6ff;
     --btn-secondary-border: #bfdbfe;
@@ -14,8 +15,9 @@
   }
 
   html.dark {
-    --canvas-bg: #070d18;
+    --canvas-bg: #0b131e;
     --surface-bg: #0e1726;
+    --text-main: #ffffff;
     --border-color: #1c2a3e;
     --btn-secondary-bg: #0e1b2e;
     --btn-secondary-border: rgba(0, 128, 255, 0.4);
@@ -27,7 +29,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--canvas-bg);
-    color: var(--text-color, inherit);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
