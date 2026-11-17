@@ -19,15 +19,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#0B131E]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3 w-full">
         
-        {/* LOGO Y MARCA NUZUN (Ampliado y Sin Márgenes Transparentes) */}
+        {/* LOGO Y MARCA NUZUN */}
         <div className="flex items-center gap-3.5 shrink-0 select-none">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-2xl bg-[#0B131E] border border-[#1E293B] shadow-lg shadow-[#1A73E8]/20 overflow-hidden">
-            <img 
-              src="/nuzun-logo.png" 
-              alt="NUZUN Logo" 
-              className="w-full h-full object-contain scale-150"
-            />
-          </div>
+          <img 
+            src="/nuzun-logo.png" 
+            alt="NUZUN Logo" 
+            className="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 drop-shadow"
+          />
           <div className="flex flex-col leading-tight">
             <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-900 dark:text-white">
               NUZUN
