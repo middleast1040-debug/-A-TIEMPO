@@ -120,133 +120,202 @@ export default function App() {
 
   const handleAddChecklistItem = (label: string) => {
     const newItem: ExitChecklistItem = {
-      id: `custom-${Date.now()}`, label, checked: false, }; setChecklist((prev) => [...prev, newItem]); };  const checkedCount = useMemo(() => checklist.filter((i) => i.checked).length, [checklist]);  const isAlertTab = activeTab === 'noticias' \vert{}\vert{} activeTab === 'alertas';  return ( <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#0B131E] text-slate-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300"> <Header onOpenChecklist={() => setIsChecklistOpen(true)} checklistCount={{ checked: checkedCount, total: checklist.length }} themeMode={themeMode} onToggleTheme={handleToggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} />  <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10"> {/* Hero Banner NUZUN - Sobrio y Azul Eléctrico Sólido */} <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors"> <div className="flex flex-col md:flex-row md:items-center justify-between gap-5"> <div className="space-y-3 max-w-2xl"> {/* Identificador de Marca NUZUN (Isotipo Vectorial Integrado) */} <div className="flex items-center gap-3 pb-1"> <div className="w-9 h-9 rounded-xl bg-[#1A73E8] flex items-center justify-center shadow-md shadow-[#1A73E8]/25 text-white shrink-0"> <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" > <path d="M18 6L6 18M6 6l12 12" /> <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z" /> </svg> </div> <div className="flex items-center gap-2"> <span className="text-lg font-extrabold tracking-widest text-slate-900 dark:text-white"> NUZUN </span> <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#1A73E8]/15 text-[#1A73E8]"> Sistema Activo </span> </div> </div>  {/* Badges de Sistema y Tarifa */} <div className="flex flex-wrap items-center gap-2"> <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-bold text-[#1A73E8]"> <MapPin className="w-3.5 h-3.5" /> <span>{currentCitySystem.name}</span> </span> <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-semibold text-slate-700 dark:text-[#8A9BA8]"> <ArrowRightLeft className="w-3.5 h-3.5 text-[#1A73E8]" /> <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')} · Transbordo $0</span> </span> </div>  {/* Título Principal y Eslogan */} <div className="space-y-1"> <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight"> Movilidad exacta,{' '} <span className="text-[#1A73E8]"> sin complicaciones. </span> </h1> <p className="text-xs sm:text-sm text-slate-600 dark:text-[#8A9BA8]"> Control de arribo y salida puerta a andén en tiempo real. </p> </div>  {/* Métricas Rápidas */} <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 dark:text-[#8A9BA8]"> <div className="flex items-center gap-1.5"> <Footprints className="w-4 h-4 text-[#1A73E8]" /> <span>Caminata: <strong className="text-slate-900 dark:text-white">{walkingMinutes} min</strong></span> </div> <div className="flex items-center gap-1.5"> <Gauge className="w-4 h-4 text-[#1A73E8]" /> <span>Sincronización GPS activa</span> </div> </div> </div>  {/* Acción Principal: Radar Vial */} <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0"> <button type="button" onClick={() => setIsRadarOpen(true)} className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-xs sm:text-sm shadow-md transition cursor-pointer" > <Radar className="w-4 h-4" /> <span>Radar Vial NUZUN</span> </button> </div> </div> </section>  {/* Pestaña 1: Planear */} {activeTab === 'planear' && ( <div className="space-y-6"> <QuickDestinationHub citySystem={currentCitySystem} currentDestination={destinationStop} onSelectDestination={(dest, orig) => { setDestinationStop(dest); if (orig) setOriginStop(orig); handleCalculate(); }} />  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"> <section className="lg:col-span-6 space-y-5"> <RouteSelector routes={routes} selectedRouteId={selectedRouteId} onSelectRouteId={setSelectedRouteId} originStop={originStop} onChangeOriginStop={setOriginStop} destinationStop={destinationStop} onChangeDestinationStop={setDestinationStop} intermediateStops={intermediateStops} onAddIntermediateStop={(stop) => setIntermediateStops((prev) => [...prev, stop])} onRemoveIntermediateStop={(idx) => setIntermediateStops((prev) => prev.filter((_, i) => i !== idx)) } onChangeIntermediateStop={(idx, val) => setIntermediateStops((prev) => prev.map((s, i) => (i === idx ? val : s))) } onOpenMap={() => setIsRadarOpen(true)} availableStations={currentCitySystem.stations} walkingMinutes={walkingMinutes} onChangeWalkingMinutes={setWalkingMinutes} bufferMinutes={bufferMinutes} onChangeBufferMinutes={setBufferMinutes} onCalculate={handleCalculate} isConsulting={isConsulting} currentTimeMs={currentTimeMs} cityId={currentCitySystem.id} />  {activeTuLlaveCard && ( <TuLlaveQuickWidget card={activeTuLlaveCard} fare={currentCitySystem.fare} citySystemName={currentCitySystem.name} onOpenModal={(tab) => { if (tab) setTuLlaveInitialTab(tab); setIsTuLlaveModalOpen(true); }} onQuickRefresh={async () => {}} isRefreshing={false} /> )}  <FavoritesList favorites={favorites} routes={routes} onSelectFavorite={(fav) => { setSelectedRouteId(fav.routeId); setOriginStop(fav.originStop); setDestinationStop(fav.destinationStop); handleCalculate(); }} onRemoveFavorite={(id) => setFavorites((prev) => prev.filter((f) => f.id !== id)) } /> </section>  <section className="lg:col-span-6 space-y-5"> {hasCalculated && departureCalculation && ( <div id="resultadoCard"> <DepartureResultCard calculation={departureCalculation} isAlarmActive={isAlarmActive && travelState === 'monitoring'} onToggleAlarm={() => { setIsAlarmActive(!isAlarmActive); setTravelState((prev) => (prev === 'monitoring' ? 'inactive' : 'monitoring')); }} onTestChime={() => playDepartureChime('gentle')} onOpenFocusMode={() => setIsFocusModeOpen(true)} isFavorite={favorites.some( (f) => f.routeId === selectedRouteId && f.destinationStop === destinationStop )} onToggleFavorite={() => { const exists = favorites.some( (f) => f.routeId === selectedRouteId && f.destinationStop === destinationStop ); if (exists) { setFavorites((prev) => prev.filter( (f) => !(f.routeId === selectedRouteId && f.destinationStop === destinationStop) ) ); } else { setFavorites((prev) => [ ...prev, { id: `fav-${Date.now()}`,
-                              label: destinationStop,
-                              routeId: selectedRouteId,
-                              originStop,
-                              destinationStop,
-                            },
-                          ]);
-                        }
-                      }}
-                      isConsulting={isConsulting}
-                      currentTimeMs={currentTimeMs}
-                      destinationStop={destinationStop}
-                      cityName={currentCitySystem.name}
-                      isWakeUpAlarmActive={false}
-                      onToggleWakeUpAlarm={() => {}}
-                    />
-                  </div>
-                )}
+      id: `custom-${Date.now()}`,
+      label,
+      checked: false,
+    };
+    setChecklist((prev) => [...prev, newItem]);
+  };
 
-                <BusLocatorSection
-                  routes={routes}
-                  cityName={currentCitySystem.name}
-                  onSelectBusRoute={(rId, orig, dest) => {
-                    setSelectedRouteId(rId);
-                    setOriginStop(orig);
-                    setDestinationStop(dest);
-                    handleCalculate();
-                  }}
-                  onOpenMapForRoute={() => setIsRadarOpen(true)}
-                />
-              </section>
-            </div>
-          </div>
-        )}
+  const checkedCount = useMemo(() => checklist.filter((i) => i.checked).length, [checklist]);
 
-        {/* Pestaña 2: Transbordo */}
-        {activeTab === 'transbordo' && (
-          <TransferWindowWidget
-            citySystem={currentCitySystem}
-            onOpenCardManager={() => setIsTuLlaveModalOpen(true)}
-          />
-        )}
+  const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
-        {/* Pestaña 3: Ciudades */}
-        {activeTab === 'ciudades' && (
-          <CitiesExplorerTab
-            selectedCityId={selectedCityId}
-            onSelectCity={(cId) => {
-              setSelectedCityId(cId);
-              setActiveTab('planear');
-            }}
-            onOpenCardManager={() => setIsTuLlaveModalOpen(true)}
-            onOpenFullScreenMap={() => setIsRadarOpen(true)}
-          />
-        )}
-
-        {/* Pestaña 4: Alertas / Noticias */}
-        {isAlertTab && (
-          <BogotaNewsSection citySystem={currentCitySystem} />
-        )}
-
-        {/* Secciones Inferiores de Apoyo y Compartir */}
-        <div className="pt-4 space-y-6">
-          <SubscriptionFooterSection />
-          <SocialShareFooter />
-        </div>
-      </main>
-
-      <BottomNavDock
-        activeTab={activeTab as any}
-        onSelectTab={(tab) => {
-          if (tab === 'tarjetas') {
-            setIsTuLlaveModalOpen(true);
-          } else {
-            setActiveTab(tab);
-          }
-        }}
-        cardBalance={activeTuLlaveCard?.balance}
-      />
-
-      <RadarTacticoModal
-        isOpen={isRadarOpen}
-        onClose={() => setIsRadarOpen(false)}
-        cityName={currentCitySystem.name}
-        cityId={currentCitySystem.id}
-      />
-
-      <ChecklistDrawer
-        isOpen={isChecklistOpen}
-        onClose={() => setIsChecklistOpen(false)}
-        items={checklist}
-        onToggleItem={handleToggleChecklistItem}
-        onResetItems={handleResetChecklist}
-        onAddItem={handleAddChecklistItem}
-      />
-
-      <AppSettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+  return (
+    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-[#0B131E] text-slate-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
+      <Header
+        onOpenChecklist={() => setIsChecklistOpen(true)}
+        checklistCount={{ checked: checkedCount, total: checklist.length }}
         themeMode={themeMode}
         onToggleTheme={handleToggleTheme}
-        walkingMinutes={walkingMinutes}
-        onChangeWalkingMinutes={setWalkingMinutes}
-        bufferMinutes={bufferMinutes}
-        onChangeBufferMinutes={setBufferMinutes}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {departureCalculation && isFocusModeOpen && (
-        <FocusDepartureMode
-          isOpen={isFocusModeOpen}
-          onClose={() => setIsFocusModeOpen(false)}
-          calculation={departureCalculation}
-          currentTimeMs={currentTimeMs}
-          destinationStop={destinationStop}
-        />
-      )}
+      <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
+        {/* Hero Banner NUZUN - Sobrio y Azul Eléctrico Sólido */}
+        <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-3 max-w-2xl">
+              {/* Identificador de Marca NUZUN (Isotipo Vectorial Integrado) */}
+              <div className="flex items-center gap-3 pb-1">
+                <div className="w-9 h-9 rounded-xl bg-[#1A73E8] flex items-center justify-center shadow-md shadow-[#1A73E8]/25 text-white shrink-0">
+                  <svg
+                    className="w-5 h-5 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                    <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z" />
+                  </svg>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-extrabold tracking-widest text-slate-900 dark:text-white">
+                    NUZUN
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#1A73E8]/15 text-[#1A73E8]">
+                    Sistema Activo
+                  </span>
+                </div>
+              </div>
 
-      <TuLlaveManagerModal
-        isOpen={isTuLlaveModalOpen}
-        onClose={() => setIsTuLlaveModalOpen(false)}
-        cards={tullaveCards}
-        onUpdateCards={handleUpdateCards}
-        transactions={tullaveTransactions}
-        onUpdateTransactions={setTullaveTransactions}
-        initialTab={tuLlaveInitialTab}
-        activeCityId={selectedCityId}
-      />
-    </div>
-  );
-}
+              {/* Badges de Sistema y Tarifa */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-bold text-[#1A73E8]">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{currentCitySystem.name}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-semibold text-slate-700 dark:text-[#8A9BA8]">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-[#1A73E8]" />
+                  <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')} · Transbordo $0</span>
+                </span>
+              </div>
+
+              {/* Título Principal y Eslogan */}
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                  Movilidad exacta,{' '}
+                  <span className="text-[#1A73E8]">
+                    sin complicaciones.
+                  </span>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-[#8A9BA8]">
+                  Control de arribo y salida puerta a andén en tiempo real.
+                </p>
+              </div>
+
+              {/* Métricas Rápidas */}
+              <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 dark:text-[#8A9BA8]">
+                <div className="flex items-center gap-1.5">
+                  <Footprints className="w-4 h-4 text-[#1A73E8]" />
+                  <span>Caminata: <strong className="text-slate-900 dark:text-white">{walkingMinutes} min</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Gauge className="w-4 h-4 text-[#1A73E8]" />
+                  <span>Sincronización GPS activa</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Acción Principal: Radar Vial */}
+            <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsRadarOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-xs sm:text-sm shadow-md transition cursor-pointer"
+              >
+                <Radar className="w-4 h-4" />
+                <span>Radar Vial NUZUN</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Pestaña 1: Planear */}
+        {activeTab === 'planear' && (
+          <div className="space-y-6">
+            <QuickDestinationHub
+              citySystem={currentCitySystem}
+              currentDestination={destinationStop}
+              onSelectDestination={(dest, orig) => {
+                setDestinationStop(dest);
+                if (orig) setOriginStop(orig);
+                handleCalculate();
+              }}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <section className="lg:col-span-6 space-y-5">
+                <RouteSelector
+                  routes={routes}
+                  selectedRouteId={selectedRouteId}
+                  onSelectRouteId={setSelectedRouteId}
+                  originStop={originStop}
+                  onChangeOriginStop={setOriginStop}
+                  destinationStop={destinationStop}
+                  onChangeDestinationStop={setDestinationStop}
+                  intermediateStops={intermediateStops}
+                  onAddIntermediateStop={(stop) => setIntermediateStops((prev) => [...prev, stop])}
+                  onRemoveIntermediateStop={(idx) =>
+                    setIntermediateStops((prev) => prev.filter((_, i) => i !== idx))
+                  }
+                  onChangeIntermediateStop={(idx, val) =>
+                    setIntermediateStops((prev) => prev.map((s, i) => (i === idx ? val : s)))
+                  }
+                  onOpenMap={() => setIsRadarOpen(true)}
+                  availableStations={currentCitySystem.stations}
+                  walkingMinutes={walkingMinutes}
+                  onChangeWalkingMinutes={setWalkingMinutes}
+                  bufferMinutes={bufferMinutes}
+                  onChangeBufferMinutes={setBufferMinutes}
+                  onCalculate={handleCalculate}
+                  isConsulting={isConsulting}
+                  currentTimeMs={currentTimeMs}
+                  cityId={currentCitySystem.id}
+                />
+
+                {activeTuLlaveCard && (
+                  <TuLlaveQuickWidget
+                    card={activeTuLlaveCard}
+                    fare={currentCitySystem.fare}
+                    citySystemName={currentCitySystem.name}
+                    onOpenModal={(tab) => {
+                      if (tab) setTuLlaveInitialTab(tab);
+                      setIsTuLlaveModalOpen(true);
+                    }}
+                    onQuickRefresh={async () => {}}
+                    isRefreshing={false}
+                  />
+                )}
+
+                <FavoritesList
+                  favorites={favorites}
+                  routes={routes}
+                  onSelectFavorite={(fav) => {
+                    setSelectedRouteId(fav.routeId);
+                    setOriginStop(fav.originStop);
+                    setDestinationStop(fav.destinationStop);
+                    handleCalculate();
+                  }}
+                  onRemoveFavorite={(id) =>
+                    setFavorites((prev) => prev.filter((f) => f.id !== id))
+                  }
+                />
+              </section>
+
+              <section className="lg:col-span-6 space-y-5">
+                {hasCalculated && departureCalculation && (
+                  <div id="resultadoCard">
+                    <DepartureResultCard
+                      calculation={departureCalculation}
+                      isAlarmActive={isAlarmActive && travelState === 'monitoring'}
+                      onToggleAlarm={() => {
+                        setIsAlarmActive(!isAlarmActive);
+                        setTravelState((prev) => (prev === 'monitoring' ? 'inactive' : 'monitoring'));
+                      }}
+                      onTestChime={() => playDepartureChime('gentle')}
+                      onOpenFocusMode={() => setIsFocusModeOpen(true)}
+                      isFavorite={favorites.some(
+                        (f) => f.routeId === selectedRouteId && f.destinationStop === destinationStop
+                      )}
+                      onToggleFavorite={() => {
+                        const exists = favorites.some(
+                          (f) => f.routeId === selectedRouteId && f.destinationStop === destinationStop
+                        );
+                        if (exists) {
+                          setFavorites((prev) =>
+                            prev.filter(
+                              (f) => !(f.routeId === selectedRouteId && f.destinationStop
