@@ -21,13 +21,11 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* LOGO Y MARCA NUZUN */}
         <div className="flex items-center gap-2.5 shrink-0 select-none">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#1A73E8] to-[#0D47A1] flex items-center justify-center shadow-md shadow-[#1A73E8]/30 text-white font-black">
-            {/* Isotipo Vectorial NUZUN */}
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-              <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z" />
-            </svg>
-          </div>
+          <img 
+            src="/nuzun-logo.png" 
+            alt="NUZUN Logo" 
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl shadow-md shadow-[#1A73E8]/20"
+          />
           <div className="flex flex-col leading-none">
             <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
               NUZUN
@@ -40,13 +38,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* CONTROLES DE ACCIÓN */}
         <div className="flex items-center gap-2 shrink-0">
-          
-          {/* Botón Modo Día / Noche */}
           <button
             type="button"
             onClick={onToggleTheme}
             className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-            title={themeMode === 'dark' ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
           >
             {themeMode === 'dark' ? (
               <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -60,13 +55,11 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Botón Checklist */}
           {onOpenChecklist && (
             <button
               type="button"
               onClick={onOpenChecklist}
               className="relative flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-              title="Lista antes de salir de casa"
             >
               <svg className="w-4 h-4 text-[#1A73E8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
@@ -79,12 +72,10 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Botón Ajustes */}
           <button
             type="button"
             onClick={onOpenSettings}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-            title="Ajustes y opciones"
           >
             <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="3" />
@@ -92,7 +83,6 @@ export const Header: React.FC<HeaderProps> = ({
             </svg>
             <span className="text-xs font-bold hidden sm:inline">Ajustes</span>
           </button>
-
         </div>
       </div>
     </header>
