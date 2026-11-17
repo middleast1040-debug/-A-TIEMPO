@@ -4,65 +4,59 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
-  :root, html.light {
-    --canvas-bg: #f4f6f9;
-    --surface-bg: #ffffff;
-    --text-main: #0f172a;
-    --border-color: #e2e8f0;
-  }
-
-  html.dark {
-    --canvas-bg: #070D18;
-    --surface-bg: #0E1726;
-    --text-main: #ffffff;
-    --border-color: #1E293B;
-  }
-
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--canvas-bg);
-    color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
-/* REGLAS MAESTRAS DE FORZADO ABSOLUTO (Modo Oscuro) */
-html.dark, html.dark body {
+/* ==========================================
+   FORZADO ABSOLUTO DE MODO OSCURO / DIURNO
+   ========================================== */
+
+/* Cuando la app está en modo oscuro */
+.app-theme-dark, 
+.app-theme-dark body, 
+.app-theme-dark div, 
+.app-theme-dark section, 
+.app-theme-dark article, 
+.app-theme-dark header, 
+.app-theme-dark footer {
   background-color: #070D18 !important;
-  color: #ffffff !important;
-}
-
-html.dark div, 
-html.dark section, 
-html.dark article {
-  background-color: inherit;
-  color: inherit;
-}
-
-/* Forzar que cualquier tarjeta blanca cambie al tono oscuro de NUZUN */
-html.dark .bg-white,
-html.dark [class*="bg-white"] {
-  background-color: #111C2E !important;
-  color: #ffffff !important;
+  color: #FFFFFF !important;
   border-color: #1E293B !important;
 }
 
-html.dark .text-slate-900,
-html.dark .text-slate-800,
-html.dark .text-slate-700 {
-  color: #ffffff !important;
+/* Forzar que cualquier contenedor con fondo blanco o claro pase al tono oscuro de NUZUN */
+.app-theme-dark .bg-white,
+.app-theme-dark [class*="bg-white"],
+.app-theme-dark .bg-slate-50,
+.app-theme-dark .bg-slate-100 {
+  background-color: #111C2E !important;
+  color: #FFFFFF !important;
+  border-color: #1E293B !important;
 }
 
-html.dark .text-slate-600,
-html.dark .text-slate-500 {
+/* Forzar colores de texto legibles en modo oscuro */
+.app-theme-dark .text-slate-900,
+.app-theme-dark .text-slate-800,
+.app-theme-dark .text-slate-700 {
+  color: #FFFFFF !important;
+}
+
+.app-theme-dark .text-slate-600,
+.app-theme-dark .text-slate-500,
+.app-theme-dark .text-slate-400 {
   color: #8A9BA8 !important;
 }
 
-html.dark .border-slate-200,
-html.dark .border-slate-100 {
-  border-color: #1E293B !important;
+/* Cuando la app está en modo diurno */
+.app-theme-light,
+.app-theme-light body {
+  background-color: #F4F6F9 !important;
+  color: #0F172A !important;
 }
 
 /* Custom scrollbar */
