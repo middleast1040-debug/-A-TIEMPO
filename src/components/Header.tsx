@@ -1,5 +1,4 @@
 import React from 'react';
-import { Settings, ListChecks, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   onOpenChecklist?: () => void;
@@ -19,72 +18,87 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#0B131E]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 w-full">
-        {/* Logo y Marca NUZUN */}
+        
+        {/* LOGO Y MARCA NUZUN */}
         <div className="flex items-center gap-2.5 shrink-0 select-none">
           <img 
             src="/assets/nuzun-logo.png" 
             alt="NUZUN Logo" 
-            className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl shadow-md shadow-[#1A73E8]/20" 
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl shadow-md shadow-[#1A73E8]/20"
+            onError={(e) => {
+              // Fallback visual por si la ruta del PNG falla temporalmente
+              (e.target as HTMLElement).style.display = 'none';
+            }}
           />
           <div className="flex flex-col leading-none">
             <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
               NUZUN
             </span>
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#1A73E8] dark:text-[#1A73E8] mt-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#1A73E8] mt-1">
               Movilidad Exacta
             </span>
           </div>
         </div>
 
-        {/* Controles de Acción (Sol/Luna, Checklist, Ajustes) */}
+        {/* CONTROLES DE ACCIÓN CON SVG NATIVOS (Cero errores de librerías) */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Botón Diurno / Nocturno */}
+          
+          {/* Botón Modo Día / Noche */}
           <button
             type="button"
             onClick={onToggleTheme}
-            className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
+            className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
             title={themeMode === 'dark' ? 'Cambiar a Modo Día' : 'Cambiar a Modo Noche'}
-            aria-label={themeMode === 'dark' ? 'Activar modo día' : 'Activar modo noche'}
           >
             {themeMode === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400 transition-transform group-hover:rotate-45" strokeWidth={2} />
+              // Icono Sol SVG
+              <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
             ) : (
-              <Moon className="w-4 h-4 text-[#1A73E8] transition-transform group-hover:-rotate-12" strokeWidth={2} />
+              // Icono Luna SVG
+              <svg className="w-4 h-4 text-[#1A73E8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
             )}
           </button>
 
-          {/* Botón de Checklist */}
+          {/* Botón Checklist */}
           {onOpenChecklist && (
             <button
               type="button"
               onClick={onOpenChecklist}
-              className="relative flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
+              className="relative flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
               title="Lista antes de salir de casa"
-              aria-label="Abrir lista antes de salir de casa"
             >
-              <ListChecks className="w-4 h-4 text-[#1A73E8] transition-transform group-hover:scale-110" strokeWidth={2} />
+              {/* Icono Checklist SVG */}
+              <svg className="w-4 h-4 text-[#1A73E8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
+              </svg>
               {checklistCount && checklistCount.total > 0 && (
                 <span className="ml-1 text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 hidden sm:inline">
                   {checklistCount.checked}/{checklistCount.total}
                 </span>
               )}
-              {checklistCount && checklistCount.checked < checklistCount.total && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#1A73E8] ring-2 ring-white dark:ring-[#0B131E]" />
-              )}
             </button>
           )}
 
-          {/* Botón de Ajustes */}
+          {/* Botón Ajustes */}
           <button
             type="button"
             onClick={onOpenSettings}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer shadow-xs group"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#111C2E] dark:hover:bg-[#1A2840] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
             title="Ajustes y opciones"
-            aria-label="Abrir configuración y opciones"
           >
-            <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-[#1A73E8] transition-transform group-hover:rotate-45 duration-200" strokeWidth={2} />
+            {/* Icono Ajustes/Engranaje SVG */}
+            <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
             <span className="text-xs font-bold hidden sm:inline">Ajustes</span>
           </button>
+
         </div>
       </div>
     </header>
