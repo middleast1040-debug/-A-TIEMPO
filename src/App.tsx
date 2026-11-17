@@ -318,4 +318,140 @@ export default function App() {
                         if (exists) {
                           setFavorites((prev) =>
                             prev.filter(
-                              (f) => !(f.routeId === selectedRouteId && f.destinationStop
+                              (f) => !(f.routeId === selectedRouteId && f.destinationStop === destinationStop)
+                            )
+                          );
+                        } else {
+                          setFavorites((prev) => [
+                            ...prev,
+                            {
+                              id: `fav-${Date.now()}`,
+                              label: destinationStop,
+                              routeId: selectedRouteId,
+                              originStop,
+                              destinationStop,
+                            },
+                          ]);
+                        }
+                      }}
+                      isConsulting={isConsulting}
+                      currentTimeMs={currentTimeMs}
+                      destinationStop={destinationStop}
+                      cityName={currentCitySystem.name}
+                      isWakeUpAlarmActive={false}
+                      onToggleWakeUpAlarm={() => {}}
+                    />
+                  </div>
+                )}
+
+                <BusLocatorSection
+                  routes={routes}
+                  cityName={currentCitySystem.name}
+                  onSelectBusRoute={(rId, orig, dest) => {
+                    setSelectedRouteId(rId);
+                    setOriginStop(orig);
+                    setDestinationStop(dest);
+                    handleCalculate();
+                  }}
+                  onOpenMapForRoute={() => setIsRadarOpen(true)}
+                />
+              </section>
+            </div>
+          </div>
+        )}
+
+        {/* Pestaña 2: Transbordo */}
+        {activeTab === 'transbordo' && (
+          <TransferWindowWidget
+            citySystem={currentCitySystem}
+            onOpenCardManager={() => setIsTuLlaveModalOpen(true)}
+          />
+        )}
+
+        {/* Pestaña 3: Ciudades */}
+        {activeTab === 'ciudades' && (
+          <CitiesExplorerTab
+            selectedCityId={selectedCityId}
+            onSelectCity={(cId) => {
+              setSelectedCityId(cId);
+              setActiveTab('planear');
+            }}
+            onOpenCardManager={() => setIsTuLlaveModalOpen(true)}
+            onOpenFullScreenMap={() => setIsRadarOpen(true)}
+          />
+        )}
+
+        {/* Pestaña 4: Alertas / Noticias */}
+        {isAlertTab && (
+          <BogotaNewsSection citySystem={currentCitySystem} />
+        )}
+
+        {/* Secciones Inferiores de Apoyo y Compartir */}
+        <div className="pt-4 space-y-6">
+          <SubscriptionFooterSection />
+          <SocialShareFooter />
+        </div>
+      </main>
+
+      <BottomNavDock
+        activeTab={activeTab as any}
+        onSelectTab={(tab) => {
+          if (tab === 'tarjetas') {
+            setIsTuLlaveModalOpen(true);
+          } else {
+            setActiveTab(tab);
+          }
+        }}
+        cardBalance={activeTuLlaveCard?.balance}
+      />
+
+      <RadarTacticoModal
+        isOpen={isRadarOpen}
+        onClose={() => setIsRadarOpen(false)}
+        cityName={currentCitySystem.name}
+        cityId={currentCitySystem.id}
+      />
+
+      <ChecklistDrawer
+        isOpen={isChecklistOpen}
+        onClose={() => setIsChecklistOpen(false)}
+        items={checklist}
+        onToggleItem={handleToggleChecklistItem}
+        onResetItems={handleResetChecklist}
+        onAddItem={handleAddChecklistItem}
+      />
+
+      <AppSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        themeMode={themeMode}
+        onToggleTheme={handleToggleTheme}
+        walkingMinutes={walkingMinutes}
+        onChangeWalkingMinutes={setWalkingMinutes}
+        bufferMinutes={bufferMinutes}
+        onChangeBufferMinutes={setBufferMinutes}
+      />
+
+      {departureCalculation && isFocusModeOpen && (
+        <FocusDepartureMode
+          isOpen={isFocusModeOpen}
+          onClose={() => setIsFocusModeOpen(false)}
+          calculation={departureCalculation}
+          currentTimeMs={currentTimeMs}
+          destinationStop={destinationStop}
+        />
+      )}
+
+      <TuLlaveManagerModal
+        isOpen={isTuLlaveModalOpen}
+        onClose={() => setIsTuLlaveModalOpen(false)}
+        cards={tullaveCards}
+        onUpdateCards={handleUpdateCards}
+        transactions={tullaveTransactions}
+        onUpdateTransactions={setTullaveTransactions}
+        initialTab={tuLlaveInitialTab}
+        activeCityId={selectedCityId}
+      />
+    </div>
+  );
+}
