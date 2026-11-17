@@ -9,19 +9,13 @@
     --surface-bg: #ffffff;
     --text-main: #0f172a;
     --border-color: #e2e8f0;
-    --btn-secondary-bg: #eff6ff;
-    --btn-secondary-border: #bfdbfe;
-    --btn-secondary-text: #0060ea;
   }
 
   html.dark {
     --canvas-bg: #070D18;
-    --surface-bg: #0e1726;
+    --surface-bg: #0E1726;
     --text-main: #ffffff;
-    --border-color: #1c2a3e;
-    --btn-secondary-bg: #0e1b2e;
-    --btn-secondary-border: rgba(0, 128, 255, 0.4);
-    --btn-secondary-text: #38bdf8;
+    --border-color: #1E293B;
   }
 
   body {
@@ -34,23 +28,41 @@
   }
 }
 
-/* Reglas maestras de forzado absoluto para tarjetas y contenedores en modo oscuro */
-html.dark .bg-white {
-  background-color: #111C2E !important;
+/* REGLAS MAESTRAS DE FORZADO ABSOLUTO (Modo Oscuro) */
+html.dark, html.dark body {
+  background-color: #070D18 !important;
   color: #ffffff !important;
 }
 
-html.dark .border-slate-200 {
+html.dark div, 
+html.dark section, 
+html.dark article {
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Forzar que cualquier tarjeta blanca cambie al tono oscuro de NUZUN */
+html.dark .bg-white,
+html.dark [class*="bg-white"] {
+  background-color: #111C2E !important;
+  color: #ffffff !important;
   border-color: #1E293B !important;
 }
 
-html.dark .text-slate-900 {
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
   color: #ffffff !important;
 }
 
 html.dark .text-slate-600,
 html.dark .text-slate-500 {
   color: #8A9BA8 !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-100 {
+  border-color: #1E293B !important;
 }
 
 /* Custom scrollbar */
