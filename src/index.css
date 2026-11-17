@@ -4,72 +4,62 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root, html.light {
+    --bg-main: #F4F6F9;
+    --text-main: #0F172A;
+    --card-bg: #FFFFFF;
+    --border-color: #E2E8F0;
+    --text-muted: #475569;
+  }
+
+  html.dark {
+    --bg-main: #070D18;
+    --text-main: #FFFFFF;
+    --card-bg: #111C2E;
+    --border-color: #1E293B;
+    --text-muted: #8A9BA8;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
-/* ==========================================
-   FORZADO ABSOLUTO Y UNIVERSAL DE TEMA
-   ========================================== */
+/* ========================================================
+   FORZADO GLOBAL ABSOLUTO PARA TARJETAS, FONDOS E ICONOS
+   ================================================        */
 
-/* Modo Oscuro (Aplica tanto si usa la clase .dark en html/body como .app-theme-dark) */
-html.dark, 
-body.dark, 
-.app-theme-dark {
-  background-color: #070D18 !important;
+html.dark .bg-white,
+html.dark [class*="bg-white"] {
+  background-color: #111C2E !important;
   color: #FFFFFF !important;
 }
 
-/* Forzar que cualquier tarjeta o contenedor claro cambie al azul oscuro de NUZUN */
-html.dark .bg-white,
-html.dark [class*="bg-white"],
-html.dark .bg-slate-50,
-html.dark .bg-slate-100,
-.app-theme-dark .bg-white,
-.app-theme-dark [class*="bg-white"],
-.app-theme-dark .bg-slate-50,
-.app-theme-dark .bg-slate-100 {
-  background-color: #111C2E !important;
-  color: #FFFFFF !important;
+html.light .bg-white,
+html.light [class*="bg-white"] {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+html.dark .border-slate-200,
+html.dark [class*="border-slate"] {
   border-color: #1E293B !important;
 }
 
-/* Forzar legibilidad de textos en modo oscuro */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
-html.dark .text-slate-700,
-.app-theme-dark .text-slate-900,
-.app-theme-dark .text-slate-800,
-.app-theme-dark .text-slate-700 {
+html.dark .text-slate-700 {
   color: #FFFFFF !important;
 }
 
 html.dark .text-slate-600,
-html.dark .text-slate-500,
-html.dark .text-slate-400,
-.app-theme-dark .text-slate-600,
-.app-theme-dark .text-slate-500,
-.app-theme-dark .text-slate-400 {
+html.dark .text-slate-500 {
   color: #8A9BA8 !important;
-}
-
-html.dark .border-slate-200,
-html.dark .border-slate-100,
-.app-theme-dark .border-slate-200,
-.app-theme-dark .border-slate-100 {
-  border-color: #1E293B !important;
-}
-
-/* Modo Diurno */
-html.light, 
-body.light, 
-.app-theme-light {
-  background-color: #F4F6F9 !important;
-  color: #0F172A !important;
 }
 
 /* Custom scrollbar */
