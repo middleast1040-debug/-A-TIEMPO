@@ -15,7 +15,7 @@
   }
 
   html.dark {
-    --canvas-bg: #0b131e;
+    --canvas-bg: #070D18;
     --surface-bg: #0e1726;
     --text-main: #ffffff;
     --border-color: #1c2a3e;
@@ -32,6 +32,25 @@
     color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+}
+
+/* Reglas maestras de forzado absoluto para tarjetas y contenedores en modo oscuro */
+html.dark .bg-white {
+  background-color: #111C2E !important;
+  color: #ffffff !important;
+}
+
+html.dark .border-slate-200 {
+  border-color: #1E293B !important;
+}
+
+html.dark .text-slate-900 {
+  color: #ffffff !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  color: #8A9BA8 !important;
 }
 
 /* Custom scrollbar */
