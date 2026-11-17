@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-/* :is() otorga mayor especificidad a dark:* para que siempre gane sobre bg-white */
 @custom-variant dark (&:is(.dark, .dark *));
 
 @layer base {
@@ -32,7 +31,7 @@
 }
 
 /* ==========================================================
-   MODO NOCTURNO (html.dark)
+   MODO NOCTURNO: Forzar tarjetas a azul oscuro NUZUN y textos a blanco
    ========================================================== */
 html.dark,
 html.dark body {
@@ -40,30 +39,29 @@ html.dark body {
   color: #F8FAFC !important;
 }
 
-/* Tarjetas, barra superior y barra inferior -> Azul oscuro NUZUN */
 html.dark .bg-white,
+html.dark [class*="bg-white"],
 html.dark header,
 html.dark nav {
   background-color: #111C2E !important;
   border-color: #1E293B !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .bg-slate-50,
-html.dark .bg-slate-100,
-html.dark .bg-gray-50,
-html.dark .bg-gray-100 {
-  background-color: #0B131E !important;
-  border-color: #1E293B !important;
-}
-
-/* Textos oscuros -> Blancos y grises legibles en modo nocturno */
+/* Forzar que CUALQUIER texto dentro de tarjetas oscuras sea legible */
+html.dark .bg-white *,
+html.dark [class*="bg-white"] *,
 html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-slate-700,
 html.dark .text-gray-900,
 html.dark .text-gray-800,
-html.dark .text-gray-700 {
-  color: #F8FAFC !important;
+html.dark span,
+html.dark p,
+html.dark h1,
+html.dark h2,
+html.dark h3 {
+  color: #F8FAFC;
 }
 
 html.dark .text-slate-600,
@@ -80,7 +78,7 @@ html.dark .border-gray-200 {
 }
 
 /* ==========================================================
-   MODO DIURNO (html.light) - Adaptar bloques oscuros fijos
+   MODO DIURNO
    ========================================================== */
 html.light,
 html.light body {
@@ -88,25 +86,11 @@ html.light body {
   color: #0F172A !important;
 }
 
-/* Convertir contenedores oscuros fijos (excepto el recuadro del logo) a tonos claros */
-html.light [class*="bg-[#0B131E]"]:not(:has(img)),
-html.light [class*="bg-[#0E1726]"]:not(:has(img)),
-html.light [class*="bg-[#070D18]"]:not(:has(img)),
-html.light [class*="bg-[#111C2E]"]:not(:has(img)),
-html.light .bg-slate-900:not(:has(img)),
-html.light .bg-slate-950:not(:has(img)) {
-  background-color: #F1F5F9 !important;
+html.light .bg-white,
+html.light [class*="bg-white"] {
+  background-color: #FFFFFF !important;
   color: #0F172A !important;
-  border-color: #CBD5E1 !important;
-}
-
-/* Asegurar que textos blancos dentro de esos bloques convertidos sean oscuros de día */
-html.light [class*="bg-[#0B131E]"]:not(:has(img)) .text-white,
-html.light [class*="bg-[#0E1726]"]:not(:has(img)) .text-white,
-html.light [class*="bg-[#111C2E]"]:not(:has(img)) .text-white,
-html.light .bg-slate-900:not(:has(img)) .text-white,
-html.light .bg-slate-950:not(:has(img)) .text-white {
-  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
 }
 
 /* Custom scrollbar */
