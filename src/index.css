@@ -5,19 +5,19 @@
 
 @layer base {
   :root, html.light {
-    --bg-main: #f4f6f9;
-    --surface-bg: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --border-color: #e2e8f0;
+    --bg-main: #F4F6F9;
+    --surface-bg: #FFFFFF;
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --border-color: #E2E8F0;
   }
 
   html.dark {
-    --bg-main: #070d18;
-    --surface-bg: #111c2e;
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --border-color: #1e293b;
+    --bg-main: #070D18;
+    --surface-bg: #111C2E;
+    --text-main: #FFFFFF;
+    --text-muted: #8A9BA8;
+    --border-color: #1E293B;
   }
 
   body {
@@ -25,60 +25,47 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-main);
-    color: var(--text-primary);
+    color: var(--text-main);
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
-/* ==========================================================
-   REGLAS NATIVAS DE ADAPTACIÓN DE TARJETAS Y CONTENEDORES
-   ========================================================== */
-
+/* Forzar transiciones y adaptación natural en tarjetas de Tailwind */
 html.dark .bg-white,
 html.dark [class*="bg-white"] {
   background-color: var(--surface-bg) !important;
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
   border-color: var(--border-color) !important;
 }
 
 html.light .bg-white,
 html.light [class*="bg-white"] {
   background-color: var(--surface-bg) !important;
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
   border-color: var(--border-color) !important;
 }
 
-/* Garantizar legibilidad estricta de textos para evitar que desaparezcan */
+/* Coherencia absoluta de textos para evitar que desaparezcan números o letras */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
-html.dark .text-slate-700,
-html.dark .text-gray-900,
-html.dark .text-gray-800 {
-  color: #ffffff !important;
+html.dark .text-slate-700 {
+  color: #FFFFFF !important;
 }
 
 html.dark .text-slate-600,
-html.dark .text-slate-500,
-html.dark .text-gray-600,
-html.dark .text-gray-500 {
-  color: #94a3b8 !important;
+html.dark .text-slate-500 {
+  color: #8A9BA8 !important;
 }
 
 html.light .text-slate-900,
 html.light .text-slate-800,
 html.light .text-slate-700 {
-  color: #0f172a !important;
+  color: #0F172A !important;
 }
 
 html.light .text-slate-600,
 html.light .text-slate-500 {
   color: #475569 !important;
-}
-
-/* Bordes consistentes */
-html.dark [class*="border-slate"],
-html.dark [class*="border-gray"] {
-  border-color: var(--border-color) !important;
 }
 
 /* Custom scrollbar */
