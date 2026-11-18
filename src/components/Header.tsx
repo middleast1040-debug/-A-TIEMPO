@@ -19,10 +19,27 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3 w-full">
         
-        {/* LOGO NUZUN: Versión de prueba forzada para verificar compilación */}
+        {/* LOGO NUZUN: Geometría tipográfica minimalista y de alta gama */}
         <div className="flex items-center gap-3.5 shrink-0 select-none">
-          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-red-600 text-white font-black text-xl shadow-md shrink-0">
-            N
+          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 dark:bg-[#111C2E] border border-slate-800 dark:border-slate-700 text-white shadow-sm shrink-0">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5 sm:w-6 sm:h-6"
+            >
+              {/* N geométrica estilizada de trazo puro y moderno */}
+              <path
+                d="M5 19V5L19 19V5"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-white"
+              />
+              {/* Detalle sutil de precisión en el vértice superior */}
+              <circle cx="19" cy="5" r="2" fill="#1A73E8" />
+            </svg>
           </div>
 
           <div className="flex flex-col leading-tight">
