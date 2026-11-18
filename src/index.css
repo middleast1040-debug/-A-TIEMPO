@@ -5,92 +5,118 @@
 
 @layer base {
   :root, html.light {
-    --bg-main: #F4F6F9;
-    --surface-bg: #FFFFFF;
-    --text-main: #0F172A;
-    --text-muted: #475569;
-    --border-color: #E2E8F0;
+    --bg-app: #F4F6F9;
+    --bg-card: #FFFFFF;
+    --bg-subtle: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --border-subtle: #E2E8F0;
   }
 
   html.dark {
-    --bg-main: #070D18;
-    --surface-bg: #111C2E;
-    --text-main: #F8FAFC;
-    --text-muted: #94A3B8;
-    --border-color: #1E293B;
+    --bg-app: #070D18;
+    --bg-card: #111C2E;
+    --bg-subtle: #0B131E;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --border-subtle: #1E293B;
   }
 
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    background-color: var(--bg-app) !important;
+    color: var(--text-primary) !important;
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
-/* ==========================================================
-   MODO NOCTURNO: Forzar tarjetas a azul oscuro NUZUN y textos a blanco
-   ========================================================== */
-html.dark,
-html.dark body {
-  background-color: #070D18 !important;
-  color: #F8FAFC !important;
-}
+/* ==========================================================================
+   SISTEMA DE SUPERFICIES Y CONTRASTE AUTOMÁTICO (DÍA / NOCHE)
+   ========================================================================== */
 
+/* 1. Tarjetas y barras principales */
 html.dark .bg-white,
-html.dark [class*="bg-white"],
 html.dark header,
 html.dark nav {
-  background-color: #111C2E !important;
-  border-color: #1E293B !important;
-  color: #F8FAFC !important;
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
 }
 
-/* Forzar que CUALQUIER texto dentro de tarjetas oscuras sea legible */
-html.dark .bg-white *,
-html.dark [class*="bg-white"] *,
+html.light .bg-white,
+html.light header,
+html.light nav {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* 2. Fondos secundarios e inputs */
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark input,
+html.dark select {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+html.light input,
+html.light select {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* En modo diurno, suavizar bloques oscuros fijos (protegiendo el logo) */
+html.light [class*="bg-[#0B131E]"]:not(:has(img)),
+html.light [class*="bg-[#070D18]"]:not(:has(img)),
+html.light [class*="bg-[#111C2E]"]:not(:has(img)),
+html.light .bg-slate-900:not(:has(img)) {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: #CBD5E1 !important;
+}
+
+html.light [class*="bg-[#0B131E]"]:not(:has(img)) *,
+html.light [class*="bg-[#111C2E]"]:not(:has(img)) *,
+html.light .bg-slate-900:not(:has(img)) * {
+  color: var(--text-primary) !important;
+}
+
+/* 3. Jerarquía tipográfica garantizada (evita textos invisibles) */
 html.dark .text-slate-900,
 html.dark .text-slate-800,
 html.dark .text-slate-700,
 html.dark .text-gray-900,
-html.dark .text-gray-800,
-html.dark span,
-html.dark p,
-html.dark h1,
-html.dark h2,
-html.dark h3 {
-  color: #F8FAFC;
+html.dark .text-gray-800 {
+  color: var(--text-primary) !important;
 }
 
 html.dark .text-slate-600,
 html.dark .text-slate-500,
 html.dark .text-gray-600,
 html.dark .text-gray-500 {
-  color: #94A3B8 !important;
+  color: var(--text-secondary) !important;
 }
 
-html.dark .border-slate-200,
-html.dark .border-slate-100,
-html.dark .border-gray-200 {
-  border-color: #1E293B !important;
+html.light .text-slate-900,
+html.light .text-slate-800,
+html.light .text-slate-700 {
+  color: var(--text-primary) !important;
 }
 
-/* ==========================================================
-   MODO DIURNO
-   ========================================================== */
-html.light,
-html.light body {
-  background-color: #F4F6F9 !important;
-  color: #0F172A !important;
+html.light .text-slate-600,
+html.light .text-slate-500 {
+  color: var(--text-secondary) !important;
 }
 
-html.light .bg-white,
-html.light [class*="bg-white"] {
-  background-color: #FFFFFF !important;
-  color: #0F172A !important;
-  border-color: #E2E8F0 !important;
+/* 4. Bordes limpios */
+html.dark [class*="border-slate"],
+html.dark [class*="border-gray"] {
+  border-color: var(--border-subtle) !important;
 }
 
 /* Custom scrollbar */
