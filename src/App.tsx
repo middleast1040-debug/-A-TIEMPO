@@ -24,7 +24,7 @@ import { TransferWindowWidget } from './components/TransferWindowWidget';
 import { BottomNavDock } from './components/BottomNavDock';
 import { RadarTacticoModal } from './components/RadarTacticoModal';
 import { BusLocatorSection } from './components/BusLocatorSection';
-import { MapPin, ArrowRightLeft, Footprints, Gauge, Radar } from 'lucide-react';
+import { MapPin, Footprints, Radar } from 'lucide-react';
 
 export default function App() {
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>(() => {
@@ -34,13 +34,9 @@ export default function App() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (themeMode === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-    }
+    root.classList.remove('dark', 'light');
+    root.classList.add(themeMode);
+    root.setAttribute('data-theme', themeMode);
     localStorage.setItem('nuzun_theme', themeMode);
   }, [themeMode]);
 
@@ -95,7 +91,7 @@ export default function App() {
   const handleCalculate = async () => {
     setIsConsulting(true);
     setHasCalculated(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     setIsConsulting(false);
   };
 
@@ -128,11 +124,13 @@ export default function App() {
   };
 
   const checkedCount = useMemo(() => checklist.filter((i) => i.checked).length, [checklist]);
-
   const isAlertTab = activeTab === 'noticias' || activeTab === 'alertas';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300 bg-[#F4F6F9] dark:bg-[#070D18] text-slate-900 dark:text-white">
+    <div
+      data-theme={themeMode}
+      className={`nuzun-shell ${themeMode} min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300`}
+    >
       <Header
         onOpenChecklist={() => setIsChecklistOpen(true)}
         checklistCount={{ checked: checkedCount, total: checklist.length }}
@@ -141,85 +139,44 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      <main className="max-w-5xl mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 flex-1 pb-24 md:pb-10">
-        {/* Hero Banner NUZUN */}
-        <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#1E293B] p-5 sm:p-7 shadow-sm dark:shadow-xl transition-colors">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-            <div className="space-y-3 max-w-2xl">
-              {/* Identificador de Marca NUZUN */}
-              <div className="flex items-center gap-3.5 pb-1">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-[#0B131E] border border-[#1E293B] shadow-md shadow-[#1A73E8]/15 overflow-hidden shrink-0">
-                  <img
-                    src="/nuzun-logo.png"
-                    alt="NUZUN Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl font-black tracking-widest text-slate-900 dark:text-white leading-none">
-                    NUZUN
-                  </span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#1A73E8]/15 text-[#1A73E8] mt-1.5 w-max">
-                    Sistema Activo
-                  </span>
-                </div>
-              </div>
-
-              {/* Badges de Sistema y Tarifa */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-bold text-[#1A73E8]">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{currentCitySystem.name}</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#0B131E] border border-slate-200 dark:border-[#1E293B] text-xs font-semibold text-slate-700 dark:text-[#8A9BA8]">
-                  <ArrowRightLeft className="w-3.5 h-3.5 text-[#1A73E8]" />
-                  <span>Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')} · Transbordo $0</span>
-                </span>
-              </div>
-
-              {/* Título Principal y Eslogan */}
-              <div className="space-y-1">
-                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                  Movilidad exacta,{' '}
-                  <span className="text-[#1A73E8]">
-                    sin complicaciones.
-                  </span>
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-[#8A9BA8]">
-                  Control de arribo y salida puerta a andén en tiempo real.
-                </p>
-              </div>
-
-              {/* Métricas Rápidas */}
-              <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 dark:text-[#8A9BA8]">
-                <div className="flex items-center gap-1.5">
-                  <Footprints className="w-4 h-4 text-[#1A73E8]" />
-                  <span>Caminata: <strong className="text-slate-900 dark:text-white">{walkingMinutes} min</strong></span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Gauge className="w-4 h-4 text-[#1A73E8]" />
-                  <span>Sincronización GPS activa</span>
-                </div>
-              </div>
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-5 space-y-5 flex-1 pb-24 md:pb-10">
+        {/* Franja de Contexto Minimalista (Sin saturación ni logo repetido) */}
+        <section className="nuzun-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 text-[#1A73E8] font-bold">
+                <MapPin className="w-3.5 h-3.5" />
+                {currentCitySystem.name}
+              </span>
+              <span className="opacity-30">•</span>
+              <span className="nuzun-muted">
+                Pasaje ${currentCitySystem.fare.toLocaleString('es-CO')}
+              </span>
+              <span className="opacity-30">•</span>
+              <span className="inline-flex items-center gap-1 nuzun-muted">
+                <Footprints className="w-3.5 h-3.5 text-[#1A73E8]" />
+                {walkingMinutes} min caminata
+              </span>
             </div>
 
-            {/* Acción Principal: Radar Vial */}
-            <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsRadarOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-xs sm:text-sm shadow-md transition cursor-pointer"
-              >
-                <Radar className="w-4 h-4" />
-                <span>Radar Vial NUZUN</span>
-              </button>
-            </div>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">
+              Movilidad exacta, <span className="text-[#1A73E8]">puerta a andén.</span>
+            </h1>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsRadarOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A73E8] hover:bg-[#1557B0] text-white font-semibold text-xs sm:text-sm transition shrink-0 cursor-pointer"
+          >
+            <Radar className="w-4 h-4" />
+            <span>Radar Vial</span>
+          </button>
         </section>
 
         {/* Pestaña 1: Planear */}
         {activeTab === 'planear' && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <QuickDestinationHub
               citySystem={currentCitySystem}
               currentDestination={destinationStop}
@@ -230,7 +187,7 @@ export default function App() {
               }}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               <section className="lg:col-span-6 space-y-5">
                 <RouteSelector
                   routes={routes}
@@ -379,8 +336,8 @@ export default function App() {
           <BogotaNewsSection citySystem={currentCitySystem} />
         )}
 
-        {/* Secciones Inferiores de Apoyo y Compartir */}
-        <div className="pt-4 space-y-6">
+        {/* Secciones Inferiores */}
+        <div className="pt-2 space-y-5">
           <SubscriptionFooterSection />
           <SocialShareFooter />
         </div>
