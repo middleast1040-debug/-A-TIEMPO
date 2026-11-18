@@ -19,38 +19,36 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3 w-full">
         
-        {/* LOGO NUZUN: Isotipo Geométrico Minimalista de Alta Gama */}
-        <div className="flex items-center gap-3.5 shrink-0 select-none">
-          {/* Contenedor minimalista con una 'N' estructurada y arquitectónica */}
-          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 dark:bg-[#111C2E] border border-slate-800 dark:border-[#1E293B] shadow-sm shrink-0">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6 sm:w-7 sm:h-7"
-            >
-              {/* Trazos geométricos puros de la 'N' sin adornos */}
-              <path
-                d="M8 24V8L24 24V8"
-                stroke="currentColor"
-                strokeWidth="2.8"
-                strokeLinecap="square"
-                strokeLinejoin="miter"
-                className="text-white"
-              />
-              {/* Terminal de precisión geométrica en el ápice */}
-              <circle cx="24" cy="8" r="2" fill="#1A73E8" />
-            </svg>
-          </div>
+        {/* LOGO NUZUN: Monograma Arquitectónico Minimalista */}
+        <div className="flex items-center gap-3 shrink-0 select-none">
+          <svg
+            viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-9 h-9 sm:w-10 sm:h-10 shrink-0"
+          >
+            {/* Pilar izquierdo */}
+            <path
+              d="M7 33V7H12.5V33H7Z"
+              className="fill-slate-900 dark:fill-white"
+            />
+            {/* Pilar derecho */}
+            <path
+              d="M27.5 33V7H33V33H27.5Z"
+              className="fill-slate-900 dark:fill-white"
+            />
+            {/* Diagonal dinámica de trayectoria (corte limpio) */}
+            <path
+              d="M7 7H13.2L33 33H26.8L7 7Z"
+              fill="#1A73E8"
+            />
+          </svg>
 
-          <div className="flex flex-col leading-tight">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl sm:text-2xl font-black tracking-[0.2em] text-slate-900 dark:text-white">
-                NUZUN
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1A73E8]" />
-            </div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#1A73E8] mt-0.5">
+          <div className="flex flex-col leading-none">
+            <span className="text-xl sm:text-2xl font-black tracking-[0.22em] text-slate-900 dark:text-white">
+              NUZUN
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400 mt-1">
               Movilidad Exacta
             </span>
           </div>
