@@ -19,32 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3 w-full">
         
-        {/* LOGO NUZUN: Isotipo Geométrico Proporcionado y Limpio */}
+        {/* LOGO NUZUN: Versión de prueba forzada para verificar compilación */}
         <div className="flex items-center gap-3.5 shrink-0 select-none">
-          {/* Contenedor cuadrado con padding interno exacto para que el isotipo respire */}
-          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 dark:bg-[#111C2E] border border-slate-800 dark:border-[#1E293B] shadow-sm shrink-0 overflow-hidden">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6 sm:w-7 sm:h-7"
-            >
-              {/* Pilar izquierdo */}
-              <path
-                d="M6 26V6H10.5V26H6Z"
-                className="fill-white"
-              />
-              {/* Pilar derecho */}
-              <path
-                d="M21.5 26V6H26V26H21.5Z"
-                className="fill-white"
-              />
-              {/* Diagonal dinámica de trayectoria */}
-              <path
-                d="M6 6H11.5L26 26H20.5L6 6Z"
-                fill="#1A73E8"
-              />
-            </svg>
+          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-red-600 text-white font-black text-xl shadow-md shrink-0">
+            N
           </div>
 
           <div className="flex flex-col leading-tight">
@@ -54,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#1A73E8]" />
             </div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 mt-0.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#1A73E8] mt-0.5">
               Movilidad Exacta
             </span>
           </div>
@@ -106,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <svg className="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0l.06.06a2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
             <span className="text-xs font-bold hidden sm:inline">Ajustes</span>
           </button>
