@@ -19,27 +19,26 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="w-full border-b border-slate-200 dark:border-[#1E293B] bg-white/95 dark:bg-[#070D18]/95 backdrop-blur-xl sticky top-0 z-30 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3 w-full">
         
-        {/* LOGO NUZUN: Isotipo Geométrico Vectorial de Alta Gama (Autocontenido) */}
+        {/* LOGO NUZUN: Isotipo Minimalista con "N" Estilizada y Significativa */}
         <div className="flex items-center gap-3.5 shrink-0 select-none">
-          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#1A73E8] via-[#1557B0] to-[#0D47A1] text-white shadow-md shadow-[#1A73E8]/30 border border-white/20 shrink-0">
-            {/* Brillo interno de cristal */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/20 to-white/10 pointer-events-none" />
-            
+          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 dark:bg-[#111C2E] border border-slate-300 dark:border-slate-700 text-white shadow-sm shrink-0">
             <svg
-              viewBox="0 0 36 36"
+              viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6 sm:w-7 sm:h-7 relative z-10"
+              className="w-6 h-6 sm:w-7 sm:h-7"
             >
+              {/* Estructura minimalista de la N con un nodo de ruta en el vértice */}
               <path
-                d="M8 26V12C8 9.79086 9.79086 8 12 8C13.6 8 15.05 8.95 15.68 10.42L20.32 21.58C20.95 23.05 22.4 24 24 24C26.2091 24 28 22.2091 28 20V10"
-                stroke="#FFFFFF"
-                strokeWidth="3.6"
+                d="M8 24V8L24 24V8"
+                stroke="currentColor"
+                strokeWidth="3.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="text-white"
               />
-              <circle cx="8" cy="26" r="3.2" fill="#38BDF8" stroke="#0D47A1" strokeWidth="1" />
-              <circle cx="28" cy="10" r="3.2" fill="#FFFFFF" stroke="#1A73E8" strokeWidth="1" />
+              {/* Punto indicador de precisión / destino exacto */}
+              <circle cx="24" cy="8" r="2.5" fill="#1A73E8" />
             </svg>
           </div>
 
@@ -102,9 +101,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <svg className="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-            <span className="text-xs font-bold hidden sm:inline">Ajustesльники</span>
+            <span className="text-xs font-bold hidden sm:inline">Ajustes</span>
           </button>
         </div>
       </div>
